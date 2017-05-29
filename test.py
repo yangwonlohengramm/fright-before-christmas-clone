@@ -7,6 +7,9 @@ from pyglet import clock
 from pyglet.window import key
 from pyglet.window import mouse
 
+WINDOW_WIDTH = 640
+WINDOW_HEIGHT = 480
+
 class Enemy:
     #image_file is a pyglet.resource.image()
     def __init__(self, x, y, image_file, velocity):
@@ -35,9 +38,13 @@ game_mode = "fight0"
 make just one test level at first, then export them to a text file
 '''
 levels = [
+    Level(0, [
 
+    ], "bg0.png")
 ]
 enemies_remaining = 0
+
+level_number = 0
 
 event_loop = pyglet.app.EventLoop()
 
@@ -47,7 +54,7 @@ framenum = 0
 
 clock.set_fps_limit(60)
 
-window = pyglet.window.Window()
+window = pyglet.window.Window(width = WINDOW_WIDTH, height = WINDOW_HEIGHT)
 pyglet.gl.glClearColor(1.0,1.0,1.0,1)
 batch = pyglet.graphics.Batch()
 
@@ -76,6 +83,11 @@ char_options = {
         }
 cur_char = "vac0"
 # find a way to specify the weapon later
+
+def check_state(dt):
+    return True
+
+clock.schedule(check_state)
 
 def timed_erase_dots(dt):
     cur_time = get_time()
@@ -125,10 +137,16 @@ def on_mouse_press(x, y, button, modifiers):
         print("Left mouse button clicked at ({}, {}).".format(x, y))
         test_places_clicked.append([('v2i', (x, y)), ('c3B', (0, 0, 0)), get_time()])
 
+def draw_bg(level_number):
+    bg_image = pyglet.resource.image('bg'+str(level_number)+'.png')
+    sprite = pyglet.sprite.Sprite(bg_image)
+    sprite.draw()
+
 @window.event
 def on_draw():
     global framenum
     window.clear()
+    draw_bg(level_number)
     label.draw()
     batch.draw()
     for place in test_places_clicked:
