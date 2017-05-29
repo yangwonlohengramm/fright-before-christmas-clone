@@ -51,9 +51,6 @@ window = pyglet.window.Window()
 pyglet.gl.glClearColor(1.0,1.0,1.0,1)
 batch = pyglet.graphics.Batch()
 
-music = pyglet.resource.media('01 - Kirameki.mp3')
-music.play()
-
 image = pyglet.resource.image('vac0.png')
 
 test_places_clicked = []
