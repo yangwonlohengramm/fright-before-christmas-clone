@@ -54,6 +54,16 @@ game_mode = "fight0"
 '''
 make just one test level at first, then export them to a text file
 '''
+
+level_data_file = open("level_data.txt")
+level_data = level_data_file.readlines()
+level_data_file.close()
+line_num = 0
+while line_num < len(level_data):
+    level_data[line_num] = level_data[line_num].rstrip()
+    print(level_data[line_num])
+    line_num += 1
+
 levels = [
     Level(0, [
         Enemy(100, 100, "e0.png", 0, -1),

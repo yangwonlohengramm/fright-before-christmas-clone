@@ -1,0 +1,24 @@
+NUMBER_OF_LEVELS: 1
+---------------------------------------------
+LEVEL_ONE
+BACKGROUND_IMAGE: bg0.png
+NUMBER_OF_ENEMIES: 5
+100 100 e0.png 0 -1
+200 100 e0.png 0 -1
+300 100 e0.png 0 -1
+400 100 e0.png 0 -1
+500 100 e0.png 0 -1
+---------------------------------------------
+LEVEL_TWO
+BACKGROUND_IMAGE: bg1.png
+NUMBER_OF_ENEMIES: 5
+100 100 e0.png 0 -1
+150 100 e0.png 0 -1
+200 100 e0.png 0 -1
+250 100 e0.png 0 -1
+300 100 e0.png 0 -1
+350 100 e0.png 0 -1
+400 100 e0.png 0 -1
+450 100 e0.png 0 -1
+500 100 e0.png 0 -1
+550 100 e0.png 0 -1
