@@ -10,19 +10,9 @@ from pyglet.window import mouse
 WINDOW_WIDTH = 640
 WINDOW_HEIGHT = 480
 
-class Enemy:
-    #image_file is a pyglet.resource.image()
-    def __init__(self, x, y, image_file, velocity):
-        self.x = x
-        self.y = y
-        self.image_file = image_file
-        '''
-        make sure to trim the images so collisions make sense
-        '''
-        self.height = self.image_file.height
-        self.width = self.image_file.width
-        # make self.velocity a tuple?
-        self.velocity = velocity
+enemies_remaining = 0
+
+level_number = 0
 
 
 class Level:
@@ -31,6 +21,33 @@ class Level:
         self.level = level_number
         self.enemies = enemies_list
         self.bg = bg_image
+        self.enemies_batch = pyglet.graphics.Batch()
+        for enemy in self.enemies:
+            enemy.sprite.batch = self.enemies_batch
+
+class Enemy:
+    #image_file is a pyglet.resource.image()
+    def __init__(self, x, y, image_file, vel_x, vel_y):
+        self.x = x
+        self.y = y
+        self.image_name = image_file
+        self.image = pyglet.resource.image(image_file)
+        self.sprite = pyglet.sprite.Sprite(self.image, x=self.x,
+                                            y=self.y)
+        '''
+        make sure to trim the images so collisions make sense
+        '''
+        self.height = self.image.height
+        self.width = self.image.width
+        # make self.velocity a tuple?
+        # or have vx, vy
+        self.vel_x = vel_x
+        self.vel_y = vel_y
+        #eventually vel_x and vel_y will not need to be instantiated by
+        # the constructor as they will be part of a basic enemy AI.
+        # velocity not yet implemented
+
+
 
 game_mode = "fight0"
 
@@ -39,12 +56,13 @@ make just one test level at first, then export them to a text file
 '''
 levels = [
     Level(0, [
-
+        Enemy(100, 100, "e0.png", 0, -1),
+        Enemy(200, 100, "e0.png", 0, -1),
+        Enemy(300, 100, "e0.png", 0, -1),
+        Enemy(400, 100, "e0.png", 0, -1),
+        Enemy(500, 100, "e0.png", 0, -1)
     ], "bg0.png")
 ]
-enemies_remaining = 0
-
-level_number = 0
 
 event_loop = pyglet.app.EventLoop()
 
@@ -57,6 +75,9 @@ clock.set_fps_limit(60)
 window = pyglet.window.Window(width = WINDOW_WIDTH, height = WINDOW_HEIGHT)
 pyglet.gl.glClearColor(1.0,1.0,1.0,1)
 batch = pyglet.graphics.Batch()
+################################
+# ENEMIES BATCH                #
+################################
 
 image = pyglet.resource.image('vac0.png')
 
@@ -86,7 +107,6 @@ cur_char = "vac0"
 
 def check_state(dt):
     return True
-
 clock.schedule(check_state)
 
 def timed_erase_dots(dt):
@@ -98,9 +118,15 @@ def timed_erase_dots(dt):
             test_places_clicked.pop(idx)
         else:
             idx += 1
-
-
 clock.schedule(timed_erase_dots)
+
+def move_enemies(dt):
+    for enemy in levels[level_number].enemies:
+        enemy.x += enemy.vel_x # technically kinda pointless
+        enemy.y += enemy.vel_y # this too
+        enemy.sprite.x += enemy.vel_x
+        enemy.sprite.y += enemy.vel_y
+clock.schedule(move_enemies)
 
 @window.event
 def on_key_press(symbol, modifiers):
@@ -130,7 +156,6 @@ def on_key_press(symbol, modifiers):
         image = pyglet.resource.image(cur_char+".png")
         sprite = pyglet.sprite.Sprite(image, x=my_x, y=0, batch=batch)
 
-
 @window.event
 def on_mouse_press(x, y, button, modifiers):
     if button == mouse.LEFT:
@@ -149,23 +174,12 @@ def on_draw():
     draw_bg(level_number)
     label.draw()
     batch.draw()
+    levels[level_number].enemies_batch.draw()
     for place in test_places_clicked:
         pyglet.graphics.draw(1, pyglet.gl.GL_POINTS,
             place[0],
             place[1]
         )
     framenum += 1
-    #print(framenum)
-'''
-@event_loop.event
-def on_window_close(window):
-    print("CLOSE THE DAMN WINDOW!")
-    event_loop.exit()
-    sys.exit()
-    return pyglet.event.EVENT_HANDLED
-'''
-#sus
-#clock.schedule_interval(on_draw, 0.1)
 
-#event_loop.run()
 pyglet.app.run()
