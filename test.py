@@ -1,5 +1,7 @@
 #use sphinx to document
 #copy alex k's template
+#Reminder than Pyglet CAN handle decimal (float) speeds/coordinates.
+
 import time
 import sys
 import pyglet
@@ -12,8 +14,11 @@ WINDOW_HEIGHT = 480
 
 enemies_remaining = 0
 
+'''
+GAME STATE
+'''
 level_number = 0
-
+is_shop = False
 
 class Level:
     #bg is a pyglet.resource.image()
@@ -46,33 +51,49 @@ class Enemy:
         #eventually vel_x and vel_y will not need to be instantiated by
         # the constructor as they will be part of a basic enemy AI.
         # velocity not yet implemented
-
-
-
-game_mode = "fight0"
-
 '''
 make just one test level at first, then export them to a text file
 '''
+
+levels = []
 
 level_data_file = open("level_data.txt")
 level_data = level_data_file.readlines()
 level_data_file.close()
 line_num = 0
-while line_num < len(level_data):
-    level_data[line_num] = level_data[line_num].rstrip()
-    print(level_data[line_num])
-    line_num += 1
+number_of_levels = 0
 
-levels = [
-    Level(0, [
-        Enemy(100, 100, "e0.png", 0, -1),
-        Enemy(200, 100, "e0.png", 0, -1),
-        Enemy(300, 100, "e0.png", 0, -1),
-        Enemy(400, 100, "e0.png", 0, -1),
-        Enemy(500, 100, "e0.png", 0, -1)
-    ], "bg0.png")
-]
+level_data[line_num] = level_data[line_num].rstrip()
+# We are on the first line
+unpacked = level_data[line_num].split()
+number_of_levels = int(unpacked[1])
+print("There are", number_of_levels, "levels")
+line_num += 1
+
+# Build the levels
+for number_of_level_being_built in range(number_of_levels):
+    # We are now on the "-" formatting separator line_num
+    line_num += 1
+    # We are now on the level number header line
+    line_num += 1
+    # We are now on the background image specifier line
+    unpacked = level_data[line_num].split()
+    bg_res = unpacked[1]
+    print("This is where the bg image is at:", bg_res)
+    line_num += 1
+    # We are now on the number of enemies line
+    unpacked = level_data[line_num].split()
+    number_of_enemies = int(unpacked[1])
+    print("There are", number_of_enemies, "enemies")
+    line_num += 1
+    # We are now on the first enemy specification line
+    level_enemies = []
+    for i in range(number_of_enemies):
+        x, y, image_file, vel_x, vel_y = level_data[line_num].split()
+        level_enemies.append(Enemy(float(x), float(y), image_file, float(vel_x), float(vel_y)))
+        print(unpacked)
+        line_num += 1
+    levels.append(Level(number_of_level_being_built, level_enemies, bg_res))
 
 event_loop = pyglet.app.EventLoop()
 
@@ -131,6 +152,9 @@ def timed_erase_dots(dt):
 clock.schedule(timed_erase_dots)
 
 def move_enemies(dt):
+    # If the current stage of the game is a shop stage then don't animate enemies.
+    if level_number == -1:
+        return
     for enemy in levels[level_number].enemies:
         enemy.x += enemy.vel_x # technically kinda pointless
         enemy.y += enemy.vel_y # this too
@@ -165,6 +189,13 @@ def on_key_press(symbol, modifiers):
             cur_char = "vac"+str(char_options["vac"].index(True))
         image = pyglet.resource.image(cur_char+".png")
         sprite = pyglet.sprite.Sprite(image, x=my_x, y=0, batch=batch)
+
+    # This is a developer-only key. It lets you skip a level.
+    elif symbol == key.ENTER:
+        if is_shop == True:
+            return
+        # It is currently a fighting stage.
+        
 
 @window.event
 def on_mouse_press(x, y, button, modifiers):
