@@ -1,4 +1,4 @@
-NUMBER_OF_LEVELS: 1
+NUMBER_OF_LEVELS: 2
 ---------------------------------------------
 LEVEL_ONE
 BACKGROUND_IMAGE: bg0.png
