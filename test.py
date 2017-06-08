@@ -2,6 +2,8 @@
 #copy alex k's template
 #Reminder than Pyglet CAN handle decimal (float) speeds/coordinates.
 
+#Temp change to try closing issue 3 from cmd line
+
 import time
 import sys
 import pyglet
