@@ -165,7 +165,7 @@ def move_enemy(enemy):
 
 
 ################################################################################
-# Current sketchiness level: 3/10
+# Current sketchiness level: 2/10
 ################################################################################
 def move_enemy_0(enemy):
     HALF_WIDTH = WINDOW_WIDTH//2 - enemy.width//2
