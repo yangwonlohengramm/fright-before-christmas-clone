@@ -10,9 +10,11 @@ import pyglet
 from pyglet import clock
 from pyglet.window import key
 from pyglet.window import mouse
+import math
 
-WINDOW_WIDTH = 640
-WINDOW_HEIGHT = 480
+
+WINDOW_WIDTH = 1080
+WINDOW_HEIGHT = 720
 
 enemies_remaining = 0
 
@@ -35,7 +37,7 @@ class Level:
 
 class Enemy:
     #image_file is a pyglet.resource.image()
-    def __init__(self, x, y, image_file, vel_x, vel_y):
+    def __init__(self, x, y, image_file, vel_x, vel_y, idx):
         self.x = x
         self.y = y
         self.image_name = image_file
@@ -51,6 +53,9 @@ class Enemy:
         # or have vx, vy
         self.vel_x = vel_x
         self.vel_y = vel_y
+        # add an if block for each enemy for max_speed?
+        self.max_speed = 0.5
+        self.index = idx
         #eventually vel_x and vel_y will not need to be instantiated by
         # the constructor as they will be part of a basic enemy AI.
         # velocity not yet implemented
@@ -93,7 +98,7 @@ for number_of_level_being_built in range(number_of_levels):
     level_enemies = []
     for i in range(number_of_enemies):
         x, y, image_file, vel_x, vel_y = level_data[line_num].split()
-        level_enemies.append(Enemy(float(x), float(y), image_file, float(vel_x), float(vel_y)))
+        level_enemies.append(Enemy(float(x), float(y), image_file, float(vel_x), float(vel_y), i))
         print(unpacked)
         line_num += 1
     levels.append(Level(number_of_level_being_built, level_enemies, bg_res))
@@ -145,6 +150,36 @@ def timed_erase_dots(dt):
             idx += 1
 clock.schedule(timed_erase_dots)
 
+def move_enemy(enemy):
+    enemy.x += enemy.vel_x # technically kinda pointless
+    enemy.y += enemy.vel_y # this too
+    enemy.sprite.x += enemy.vel_x
+    enemy.sprite.y += enemy.vel_y
+
+def move_enemy_0(enemy):
+    HALF_WIDTH = WINDOW_WIDTH//2 - enemy.width//2
+    if (enemy.y - 0)**2 + (enemy.x - HALF_WIDTH)**2 <= 10000:
+        enemy.vel_x = 0
+        enemy.vel_y = 0
+    elif enemy.x == HALF_WIDTH:
+        enemy.vel_y = -enemy.max_speed
+        enemy.vel_x = 0
+    elif enemy.y == 0:
+        enemy.vel_y = 0
+        if enemy.x < HALF_WIDTH:
+            enemy.vel_x = enemy.max_speed
+        elif enemy.x > HALF_WIDTH:
+            enemy.vel_x = -enemy.max_speed
+    else:
+        #print(enemy.x, enemy.y)
+        slope = (enemy.y - 0)/(enemy.x - HALF_WIDTH)
+        tan_of_theta = 1/slope
+        radians = math.atan(tan_of_theta)
+        enemy.vel_y = -math.cos(radians)*enemy.max_speed
+        enemy.vel_x = -math.sin(radians)*enemy.max_speed
+        degrees = radians * 180.0 / math.pi
+
+
 def move_enemies(dt):
     # If the current stage of the game is a shop stage then don't animate enemies.
     if is_shop:
@@ -152,10 +187,11 @@ def move_enemies(dt):
     if level_number == len(levels):
         return
     for enemy in levels[level_number].enemies:
-        enemy.x += enemy.vel_x # technically kinda pointless
-        enemy.y += enemy.vel_y # this too
-        enemy.sprite.x += enemy.vel_x
-        enemy.sprite.y += enemy.vel_y
+        if enemy.image_name == "e0.png":
+            move_enemy_0(enemy)
+            #print(enemy.vel_x, enemy.vel_y)
+            move_enemy(enemy)
+
 clock.schedule(move_enemies)
 
 @window.event
@@ -191,7 +227,6 @@ def on_key_press(symbol, modifiers):
         elif symbol == key.ENTER:
             # It is currently a fighting stage.
             is_shop = True
-            print("You are now on a shop level.")
 
 
 @window.event
@@ -206,7 +241,7 @@ def on_mouse_press(x, y, button, modifiers):
     else:
         if button == mouse.LEFT: # (!!!) make sure you can't double click this or double-ENTER during fighting
             print("Left mouse button clicked at shop at ({}, {}).".format(x, y))
-            if x >= 500 and y <= 80:
+            if x >= 843 and y <= 120:
                 is_shop = False
                 level_number += 1
 
@@ -226,7 +261,7 @@ def on_draw():
     window.clear()
 
     # The game has ended and you've won (past last level)
-    if level_number == len(levels):
+    if is_shop and level_number == len(levels)-1:
         # FIX THIS
         label = pyglet.text.Label('You win!\nTHE END',
                                   font_name='Times New Roman',

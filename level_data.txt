@@ -1,17 +1,17 @@
-NUMBER_OF_LEVELS: 2
+NUMBER_OF_LEVELS: 3
 ---------------------------------------------
 LEVEL_ONE
 BACKGROUND_IMAGE: bg0.png
 NUMBER_OF_ENEMIES: 5
-100 200 e0.png 0 -0.1
+50 50 e0.png 0 -0.1
 200 200 e0.png 0 -0.2
-300 200 e0.png 0 -0.3
-400 200 e0.png 0 -0.4
-500 200 e0.png 0 -0.5
+300 420 e0.png 0 -0.3
+800 740 e0.png 0 -0.4
+600 300 e0.png 0 -0.5
 ---------------------------------------------
 LEVEL_TWO
 BACKGROUND_IMAGE: bg1.png
-NUMBER_OF_ENEMIES: 5
+NUMBER_OF_ENEMIES: 10
 100 100 e0.png 0 -1
 150 100 e0.png 0 -1
 200 100 e0.png 0 -1
@@ -22,3 +22,16 @@ NUMBER_OF_ENEMIES: 5
 450 100 e0.png 0 -1
 500 100 e0.png 0 -1
 550 100 e0.png 0 -1
+---------------------------------------------
+LEVEL_THREE
+BACKGROUND_IMAGE: bg2.png
+NUMBER_OF_ENEMIES: 5
+100 200 e0.png 0 -0.1
+200 200 e0.png 0 -0.2
+300 200 e0.png 0 -0.3
+400 200 e0.png 0 -0.4
+500 200 e0.png 0 -0.5
+
+added bg pics
+upscaled game
+added index attribute for Enemys
