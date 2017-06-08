@@ -13,6 +13,7 @@ import math
 
 WINDOW_WIDTH = 1080
 WINDOW_HEIGHT = 720
+BOTTOM_BORDER = 60
 
 enemies_remaining = 0
 
@@ -119,9 +120,12 @@ image = pyglet.resource.image('vac0.png')
 
 test_places_clicked = []
 
-
+####################
+# PLAYER CHARACTER #
+####################
 my_x = window.width/2-image.width/2
-sprite = pyglet.sprite.Sprite(image, x=my_x, y=0, batch=batch)
+my_y = 50
+sprite = pyglet.sprite.Sprite(image, x=my_x, y=my_y, batch=batch)
 
 #As per PEP8, variable names are lowercase, word-separated by underscores
 #options are from 0-4 currently, with none being operation and only 0 drawn
@@ -148,21 +152,31 @@ def timed_erase_dots(dt):
             idx += 1
 clock.schedule(timed_erase_dots)
 
+################################################################################
+# All movement should be assuming the bottom of the screen is 60 above the
+# actual bottom (720-60=660)
+################################################################################
+
 def move_enemy(enemy):
     enemy.x += enemy.vel_x # technically kinda pointless
     enemy.y += enemy.vel_y # this too
     enemy.sprite.x += enemy.vel_x
     enemy.sprite.y += enemy.vel_y
 
+
+################################################################################
+# Current sketchiness level: 3/10
+################################################################################
 def move_enemy_0(enemy):
     HALF_WIDTH = WINDOW_WIDTH//2 - enemy.width//2
-    if (enemy.y - 0)**2 + (enemy.x - HALF_WIDTH)**2 <= 10000:
+    # proximity
+    if (enemy.y - BOTTOM_BORDER)**2 + (enemy.x - HALF_WIDTH)**2 <= 10000:
         enemy.vel_x = 0
         enemy.vel_y = 0
     elif enemy.x == HALF_WIDTH:
         enemy.vel_y = -enemy.max_speed
         enemy.vel_x = 0
-    elif enemy.y == 0:
+    elif enemy.y <= BOTTOM_BORDER:
         enemy.vel_y = 0
         if enemy.x < HALF_WIDTH:
             enemy.vel_x = enemy.max_speed
@@ -170,7 +184,7 @@ def move_enemy_0(enemy):
             enemy.vel_x = -enemy.max_speed
     else:
         #print(enemy.x, enemy.y)
-        slope = (enemy.y - 0)/(enemy.x - HALF_WIDTH)
+        slope = (enemy.y - BOTTOM_BORDER)/(enemy.x - HALF_WIDTH)
         tan_of_theta = 1/slope
         radians = math.atan(tan_of_theta)
         enemy.vel_y = -math.cos(radians)*enemy.max_speed
@@ -219,7 +233,7 @@ def on_key_press(symbol, modifiers):
             elif cur_char[:3] == "def":
                 cur_char = "vac"+str(char_options["vac"].index(True))
             image = pyglet.resource.image(cur_char+".png")
-            sprite = pyglet.sprite.Sprite(image, x=my_x, y=0, batch=batch)
+            sprite = pyglet.sprite.Sprite(image, x=my_x, y=my_y, batch=batch)
 
         # This is a developer-only key. It lets you skip a level.
         elif symbol == key.ENTER:

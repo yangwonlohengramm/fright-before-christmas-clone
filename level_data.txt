@@ -3,7 +3,7 @@ NUMBER_OF_LEVELS: 3
 LEVEL_ONE
 BACKGROUND_IMAGE: bg0.png
 NUMBER_OF_ENEMIES: 5
-50 50 e0.png 0 -0.1
+50 100 e0.png 0 -0.1
 200 200 e0.png 0 -0.2
 300 420 e0.png 0 -0.3
 800 740 e0.png 0 -0.4
@@ -12,16 +12,16 @@ NUMBER_OF_ENEMIES: 5
 LEVEL_TWO
 BACKGROUND_IMAGE: bg1.png
 NUMBER_OF_ENEMIES: 10
-100 100 e0.png 0 -1
-150 100 e0.png 0 -1
-200 100 e0.png 0 -1
-250 100 e0.png 0 -1
-300 100 e0.png 0 -1
-350 100 e0.png 0 -1
-400 100 e0.png 0 -1
-450 100 e0.png 0 -1
-500 100 e0.png 0 -1
-550 100 e0.png 0 -1
+100 200 e0.png 0 -1
+150 200 e0.png 0 -1
+200 200 e0.png 0 -1
+250 200 e0.png 0 -1
+300 200 e0.png 0 -1
+350 200 e0.png 0 -1
+400 200 e0.png 0 -1
+450 200 e0.png 0 -1
+500 200 e0.png 0 -1
+550 200 e0.png 0 -1
 ---------------------------------------------
 LEVEL_THREE
 BACKGROUND_IMAGE: bg2.png
