@@ -15,6 +15,14 @@ WINDOW_WIDTH = 1080
 WINDOW_HEIGHT = 720
 BOTTOM_BORDER = 60
 
+DANGER_RADIUS = 10000
+COLLISION_ENTRY = 10
+
+ENEMY_DAMAGE = 0.1
+
+health = 100
+MAX_HEALTH = 100
+
 enemies_remaining = 0
 
 '''
@@ -23,6 +31,7 @@ GAME STATE
 
 level_number = 0
 is_shop = False
+is_game_over = False
 
 class Level:
     #bg is a pyglet.resource.image()
@@ -33,6 +42,10 @@ class Level:
         self.enemies_batch = pyglet.graphics.Batch()
         for enemy in self.enemies:
             enemy.sprite.batch = self.enemies_batch
+
+'''
+If an enemy is destroyed change the batch of the sprite to something else.
+'''
 
 class Enemy:
     #image_file is a pyglet.resource.image()
@@ -55,12 +68,28 @@ class Enemy:
         # add an if block for each enemy for max_speed?
         self.max_speed = 0.5
         self.index = idx
+        '''
+        Eventually I could have a health instead of just alive or dead
+        '''
+        self.alive = True
         #eventually vel_x and vel_y will not need to be instantiated by
         # the constructor as they will be part of a basic enemy AI.
         # velocity not yet implemented
 '''
 make just one test level at first, then export them to a text file
 '''
+
+class Projectile:
+    def __init__(self, x, y, image_file, vel_x, vel_y, idx):
+        self.x = 0
+        self.y = 0
+        self.image_name = image_file
+        self.sprite = pyglet.sprite.Sprite(self.image, x=self.x, y=self.y)
+        self.height = self.image.height
+        self.width = self.image.width
+        self.vel_x = vel_x
+        self.vel_y = vel_y
+        self.index = idx
 
 levels = []
 
@@ -78,6 +107,10 @@ print("There are", number_of_levels, "levels")
 line_num += 1
 
 # Build the levels
+'''
+I don't need vel_x vel_y input anymore, but different enemies need different things
+BRUH MAKE SUBCLASSES FOR EACH ENEMY???? :O :O
+'''
 for number_of_level_being_built in range(number_of_levels):
     # We are now on the "-" formatting separator line_num
     line_num += 1
@@ -103,6 +136,14 @@ for number_of_level_being_built in range(number_of_levels):
     levels.append(Level(number_of_level_being_built, level_enemies, bg_res))
 
 event_loop = pyglet.app.EventLoop()
+
+def rect_collide(x1l, x1r, y1d, y1u, x2l, x2r, y2d, y2u):
+    #(x1, y1) bottom left (x2, y2) top right, for the first rectangle
+
+    if (x1r >= x2l + COLLISION_ENTRY and x1l <= x2r - COLLISION_ENTRY
+        and y1u >= y2d + COLLISION_ENTRY and y1d <= y2d - COLLISION_ENTRY):
+        return True
+    return False
 
 def get_time():
     return int(round(time.time() * 1000))
@@ -170,7 +211,7 @@ def move_enemy(enemy):
 def move_enemy_0(enemy):
     HALF_WIDTH = WINDOW_WIDTH//2 - enemy.width//2
     # proximity
-    if (enemy.y - BOTTOM_BORDER)**2 + (enemy.x - HALF_WIDTH)**2 <= 10000:
+    if (enemy.y - BOTTOM_BORDER)**2 + (enemy.x - HALF_WIDTH)**2 <= DANGER_RADIUS:
         enemy.vel_x = 0
         enemy.vel_y = 0
     elif enemy.x == HALF_WIDTH:
@@ -193,17 +234,19 @@ def move_enemy_0(enemy):
 
 
 def move_enemies(dt):
-    # If the current stage of the game is a shop stage then don't animate enemies.
+    if is_game_over:
+        return
     if is_shop:
         return
     if level_number == len(levels):
         return
     for enemy in levels[level_number].enemies:
+        if enemy.alive == False:
+            continue
         if enemy.image_name == "e0.png":
             move_enemy_0(enemy)
             #print(enemy.vel_x, enemy.vel_y)
             move_enemy(enemy)
-
 clock.schedule(move_enemies)
 
 @window.event
@@ -268,12 +311,68 @@ def draw_bg():
     bg_sprite = pyglet.sprite.Sprite(bg_image)
     bg_sprite.draw()
 
+def draw_health_bar():
+    # Create sprites
+    BAR_WIDTH_MULTIPLIER=2
+    X_POS = WINDOW_WIDTH//2-MAX_HEALTH*BAR_WIDTH_MULTIPLIER//2
+    Y_POS = 30
+    BAR_HEIGHT = 15
+    BLACK_PADDING = 2
+
+    black_bar_image = pyglet.resource.image("black.png")
+    black_bar_image.width=MAX_HEALTH*BAR_WIDTH_MULTIPLIER+BLACK_PADDING*2
+    black_bar_image.height=BAR_HEIGHT+BLACK_PADDING*2
+    black_bar_sprite = pyglet.sprite.Sprite(black_bar_image, x=X_POS-BLACK_PADDING, y=Y_POS-BLACK_PADDING)
+
+    red_bar_image = pyglet.resource.image("red.png")
+    red_bar_image.width=MAX_HEALTH*BAR_WIDTH_MULTIPLIER
+    red_bar_image.height=BAR_HEIGHT
+    red_bar_sprite = pyglet.sprite.Sprite(red_bar_image, x=X_POS, y=Y_POS)
+
+    green_bar_image = pyglet.resource.image("green.png")
+    green_bar_image.width=health*BAR_WIDTH_MULTIPLIER
+    green_bar_image.height=BAR_HEIGHT
+    green_bar_sprite = pyglet.sprite.Sprite(green_bar_image, x=X_POS, y=Y_POS)
+
+    black_bar_sprite.draw()
+    red_bar_sprite.draw()
+    green_bar_sprite.draw()
+
+'''
+for now I'll do damage per frame but eventually I'll record the last damage
+time per enemy so I can do damage per second or a smaller, regular time period
+'''
+import time
+millis = int(round(time.time() * 1000))
+def apply_damage(dt):
+    global millis, health, is_game_over
+    for enemy in levels[level_number].enemies:
+        #print(int(round(time.time() * 1000)) - millis)
+        HALF_WIDTH = WINDOW_WIDTH//2 - enemy.width//2
+        if (enemy.y - BOTTOM_BORDER)**2 + (enemy.x - HALF_WIDTH)**2 <= DANGER_RADIUS:
+            health -= ENEMY_DAMAGE
+        if health <= 0:
+            is_game_over = True
+        #millis = int(round(time.time() * 1000))
+clock.schedule(apply_damage)
+
 @window.event
 def on_draw():
     window.clear()
+    # You lost (add menu options later)
+    if is_game_over:
+        label = pyglet.text.Label('You lose!\nTHE END',
+                                  font_name='Times New Roman',
+                                  font_size=36,
+                                  x=window.width//2, y=400,
+                                  anchor_x='center', anchor_y='center',
+                                  color=(0, 0, 0, 255),
+                                  multiline=True,
+                                  width=10)
+        label.draw()
 
     # The game has ended and you've won (past last level)
-    if is_shop and level_number == len(levels)-1:
+    elif is_shop and level_number == len(levels)-1:
         # FIX THIS
         label = pyglet.text.Label('You win!\nTHE END',
                                   font_name='Times New Roman',
@@ -294,6 +393,9 @@ def on_draw():
                 place[0],
                 place[1]
             )
+        # health bar
+        draw_health_bar()
+
     # This is a shop level
     else:
         draw_bg()

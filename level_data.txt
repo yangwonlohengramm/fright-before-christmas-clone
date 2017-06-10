@@ -3,11 +3,11 @@ NUMBER_OF_LEVELS: 3
 LEVEL_ONE
 BACKGROUND_IMAGE: bg0.png
 NUMBER_OF_ENEMIES: 5
-50 100 e0.png 0 -0.1
-200 200 e0.png 0 -0.2
-300 420 e0.png 0 -0.3
+400 200 e0.png 0 -0.1
+420 220 e0.png 0 -0.2
+440 240 e0.png 0 -0.3
 800 740 e0.png 0 -0.4
-600 300 e0.png 0 -0.5
+380 240 e0.png 0 -0.5
 ---------------------------------------------
 LEVEL_TWO
 BACKGROUND_IMAGE: bg1.png
