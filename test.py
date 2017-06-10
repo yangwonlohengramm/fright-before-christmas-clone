@@ -2,6 +2,11 @@
 #copy alex k's template
 #Reminder than Pyglet CAN handle decimal (float) speeds/coordinates.
 
+'''
+Make sure the game states (win, lose, store, battle 0->n) don't conflict with
+each other!
+'''
+
 import time
 import sys
 import pyglet
