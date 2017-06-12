@@ -1,6 +1,9 @@
 #use sphinx to document
 #copy alex k's template
 #Reminder than Pyglet CAN handle decimal (float) speeds/coordinates.
+#540 641 164
+
+# Currently I have manually drawn a safe space on each level background.
 
 '''
 Make sure the game states (win, lose, store, battle 0->n) don't conflict with
