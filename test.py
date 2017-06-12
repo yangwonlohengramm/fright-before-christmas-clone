@@ -299,6 +299,19 @@ def timed_erase_dots(dt):
 # clock.schedule(timed_erase_dots)
 #####
 
+def remove_out_of_window_projectiles():
+    # The following removes projectiles that are outside the window.
+    # This should save some CPU/memory in extreme scenarios.
+    remove_projectiles = []
+    for projectile in levels[level_number].projectiles:
+        projectile.apply_movement()
+        if (projectile.x + projectile.width < 0
+            or projectile.x > const.WINDOW_WIDTH
+            or projectile.y > const.WINDOW_HEIGHT):
+                remove_projectiles.append(projectile)
+    for projectile in remove_projectiles:
+        levels[level_number].projectiles.remove(projectile)
+
 def move_all(dt):
     if is_game_over:
         return
@@ -314,9 +327,7 @@ def move_all(dt):
             move.move_enemy_0(enemy)
             # Actually applies the velocity to the position
             move.move_enemy(enemy)
-    for projectile in levels[level_number].projectiles:
-        projectile.apply_movement()
-
+    remove_out_of_window_projectiles()
 clock.schedule(move_all)
 
 @window.event
