@@ -19,9 +19,9 @@ def move_enemy(enemy):
 # Current sketchiness level: 3/10
 ################################################################################
 def move_enemy_0(enemy):
-    HALF_WIDTH = const.WINDOW_WIDTH//2 - enemy.width//2
     # proximity
-    if (enemy.y - const.BOTTOM_BORDER)**2 + (enemy.x - HALF_WIDTH)**2 <= const.DANGER_RADIUS:
+    HALF_WIDTH = const.WINDOW_WIDTH/2 - enemy.width/2
+    if const.in_safe_space(enemy.x, enemy.y, enemy.width):
         enemy.vel_x = 0
         enemy.vel_y = 0
     elif enemy.x == HALF_WIDTH:
@@ -41,11 +41,3 @@ def move_enemy_0(enemy):
         enemy.vel_y = -math.cos(radians)*enemy.max_speed
         enemy.vel_x = -math.sin(radians)*enemy.max_speed
         degrees = radians * 180.0 / math.pi
-
-# applies velocity
-def move_projectile():
-    pass
-
-# changes
-def move_bomb(projectile):
-    pass

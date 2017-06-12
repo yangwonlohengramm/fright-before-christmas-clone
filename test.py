@@ -17,7 +17,9 @@ import math
 import move # my own file!
 import const
 
-ENEMY_DAMAGE = 0.1
+''' ENEMY_DAMAGE used to be 0.1 but now it's 0 for testing the projectiles '''
+ENEMY_DAMAGE = 0
+
 
 
 health = 100
@@ -90,14 +92,65 @@ class Projectile:
         '''
         x and y are different from actual sprite.x and sprite.y
         '''
-        self.x = const.BOMB_X
-        self.y = const.BOMB_Y
+        self.x = x
+        self.y = y
         self.image = image
         self.sprite = pyglet.sprite.Sprite(self.image, x=self.x, y=self.y)
         self.height = self.image.height
         self.width = self.image.width
         self.vel_x = 0
         self.vel_y = 0
+
+    def apply_movement(self):
+        self.x += self.vel_x
+        self.y += self.vel_y
+        self.sprite.x += self.vel_x
+        self.sprite.y += self.vel_y
+
+class Bomb(Projectile):
+    def __init__(self, x, y, image):
+        super().__init__(x, y, image)
+        self.dest_x = x
+        self.dest_y = y
+        self.x = const.BOMB_X
+        self.y = const.BOMB_Y
+        self.sprite.x = self.x
+        self.sprite.y = self.y
+        self.SPEED = 20.0
+
+    # should only be called once, when the bomb is created
+    def update_velocity(self):
+        HALF_WIDTH = const.WINDOW_WIDTH//2 - self.width//2
+
+        if (const.BOMB_X+self.width/2) - self.dest_x == 0:
+            self.vel_x = 0
+            self.vel_y = self.SPEED
+        elif (const.BOMB_Y+self.height/2) - self.dest_y == 0:
+            if self.dest_x <= const.BOMB_X:
+                ''' note the equals '''
+                self.vel_x = -self.SPEED
+                self.vel_y = 0
+            elif self.dest_x > const.BOMB_X:
+                self.vel_x = self.SPEED
+                self.vel_y = 0
+        else:
+            '''
+            ATAN2 IS FUCKING BLESSED!!!!
+            '''
+            '''(x+width/2, y+height/2) is the centre of the projectile image'''
+            dy = self.dest_y - (const.BOMB_Y+self.height/2)
+            dx = self.dest_x - (const.BOMB_X+self.width/2)
+            print(dx, dy)
+            '''
+            I have no idea why adding math.pi/2 would work. It's a temporary
+            (read: permanent) workaround.
+            '''
+            radians = math.atan2(dy, dx)# + math.pi/2
+            self.vel_y = math.sin(radians)*self.SPEED
+            self.vel_x = math.cos(radians)*self.SPEED
+            degrees = radians * 180.0 / math.pi
+            print(degrees)
+
 
 levels = []
 
@@ -154,6 +207,10 @@ def rect_collide(x1l, x1r, y1d, y1u, x2l, x2r, y2d, y2u):
         return True
     return False
 
+# https://developer.mozilla.org/en-US/docs/Games/Techniques/2D_collision_detection
+def mozilla_rect_collide(x1, y1, w1, h1, x2, y2, w2, h2):
+    return x1 < x2 + w2 and x1 + w1 > x2 and y1 < y2 + h2 and h1 + y1 > y2
+
 def get_time():
     return int(round(time.time() * 1000))
 
@@ -187,9 +244,11 @@ char_options = {
 cur_char = "vac0"
 # find a way to specify the weapon later
 
-def check_state(dt):
-    return True
-clock.schedule(check_state)
+def enemy_projectile_collision(dt):
+    for enemy in levels[level_number].enemies:
+        for projectile in levels[level_number].projectiles:
+            pass
+clock.schedule(enemy_projectile_collision)
 
 def timed_erase_dots(dt):
     cur_time = get_time()
@@ -201,7 +260,6 @@ def timed_erase_dots(dt):
         else:
             idx += 1
 clock.schedule(timed_erase_dots)
-
 
 def move_all(dt):
     if is_game_over:
@@ -216,12 +274,10 @@ def move_all(dt):
         if enemy.image_name == "e0.png":
             # Changes the velocity of the enemy
             move.move_enemy_0(enemy)
-            #print(enemy.vel_x, enemy.vel_y)
             # Actually applies the velocity to the position
             move.move_enemy(enemy)
     for projectile in levels[level_number].projectiles:
-        pass
-
+        projectile.apply_movement()
 
 clock.schedule(move_all)
 
@@ -260,13 +316,17 @@ def on_key_press(symbol, modifiers):
             is_shop = True
 
 def add_projectile_0(x, y):
-    print("---- ({}, {})".format(x, y))
-    levels[level_number].projectiles.append(Projectile(x-const.BOMB_WIDTH/2, y-const.BOMB_HEIGHT/2, const.BOMB_IMAGE))
+    #print("---- ({}, {})".format(x, y))
+    levels[level_number].projectiles.append(Bomb(x-const.BOMB_WIDTH/2, y-const.BOMB_HEIGHT/2, const.BOMB_IMAGE))
     bomb = levels[level_number].projectiles[-1]
     bomb.sprite.batch = levels[level_number].projectile_batch
+    bomb.update_velocity()
 
 def add_projectile(x, y):
-    print("-- ({}, {})".format(x, y))
+    #print("-- ({}, {})".format(x, y))
+    ''' CURRENTLY THIS ONLY USES THE X-VALUE TO DETERMINE SAFE-SPACE COLLISIONS '''
+    if const.in_safe_space(x, y, const.DIMENSIONS[cur_char][0]):
+        return
     if cur_char[3] == "0":
         add_projectile_0(x, y)
 
@@ -276,11 +336,10 @@ def on_mouse_press(x, y, button, modifiers):
     # Fighting level
     if not is_shop:
         if button == mouse.LEFT:
-            print("Left mouse button clicked during battle at ({}, {}).".format(x, y))
+            #print("Left mouse button clicked during battle at ({}, {}).".format(x, y))
             #test_places_clicked.append([('v2i', (x, y)), ('c3B', (0, 0, 0)), get_time()])
             if cur_char[:3] == "atk":
                 add_projectile(x, y)
-            # I COMMENTED OUT THE DISAPPEARING POINTS TESTER
 
 
     # Shop level
