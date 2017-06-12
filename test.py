@@ -256,28 +256,32 @@ def enemy_projectile_collision(dt):
     global is_shop
     remove_enemies = []
     remove_projectiles = []
-    for enemy in levels[level_number].enemies:
-        for projectile in levels[level_number].projectiles:
+
+    for projectile in levels[level_number].projectiles:
+        closest_dist = 10000000
+        corresponding_enemy = -1
+        if projectile in remove_projectiles:
+            continue
+        for enemy in levels[level_number].enemies:
+            if enemy in remove_projectiles: continue
             #make sure rect_collide isn't too sketchy... it seems to
             #brush past the legs of e0.png without collision
-            if rect_collide(enemy.x, enemy.x+enemy.width,
+            if (rect_collide(enemy.x, enemy.x+enemy.width,
                 enemy.y, enemy.y+enemy.height,
                 projectile.x, projectile.x+projectile.width,
-                projectile.y, projectile.y+projectile.height):
-                    remove_projectiles.append(projectile)
-                    remove_enemies.append(enemy)
+                projectile.y, projectile.y+projectile.height)
+                and ((enemy.y+enemy.height/2)-(projectile.y+projectile.height/2))**2+
+                ((enemy.x+enemy.width)-(projectile.x+projectile.width))**2 < closest_dist):
+                    closest_dist = (((enemy.y+enemy.height/2)-(projectile.y+projectile.height/2))**2+
+                    ((enemy.x+enemy.width)-(projectile.x+projectile.width))**2)
+                    corresponding_enemy = enemy
+        if isinstance(corresponding_enemy, Enemy):
+            remove_projectiles.append(projectile)
+            remove_enemies.append(corresponding_enemy)
     for enemy in remove_enemies:
-        if enemy in levels[level_number].enemies:
-            levels[level_number].enemies.remove(enemy)
-            ''' If statement needed here since in the double nested for loop
-            above, there could be a collision between one projectile and two
-            enemies, for example, which would append the projectile twice into
-            the projectile list. Thus we need to check if we've already removed
-            the projectile or enemy, i.e. checking if it's not in the enemies
-            list anymore/projectiles list anymore. '''
+        levels[level_number].enemies.remove(enemy)
     for projectile in remove_projectiles:
-        if projectile in levels[level_number].projectiles:
-            levels[level_number].projectiles.remove(projectile)
+        levels[level_number].projectiles.remove(projectile)
 
     if len(levels[level_number].enemies) == 0:
         levels[level_number].projectiles = [] # save memory/CPU?
