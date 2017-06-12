@@ -252,6 +252,7 @@ cur_char = "vac0"
 # find a way to specify the weapon later
 
 def enemy_projectile_collision(dt):
+    global is_shop
     remove_enemies = []
     remove_projectiles = []
     for enemy in levels[level_number].enemies:
@@ -277,7 +278,10 @@ def enemy_projectile_collision(dt):
         if projectile in levels[level_number].projectiles:
             levels[level_number].projectiles.remove(projectile)
 
-                #print("collide")
+    if len(levels[level_number].enemies) == 0:
+        levels[level_number].projectiles = [] # save memory/CPU?
+        # you have beat the level.
+        is_shop = True
 clock.schedule(enemy_projectile_collision)
 
 def timed_erase_dots(dt):
@@ -289,7 +293,9 @@ def timed_erase_dots(dt):
             test_places_clicked.pop(idx)
         else:
             idx += 1
-clock.schedule(timed_erase_dots)
+#####
+# clock.schedule(timed_erase_dots)
+#####
 
 def move_all(dt):
     if is_game_over:
