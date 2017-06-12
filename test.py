@@ -18,9 +18,9 @@ import move # my own file!
 import const
 
 ''' ENEMY_DAMAGE used to be 0.1 but now it's 0 for testing the projectiles '''
-ENEMY_DAMAGE = 0
+ENEMY_DAMAGE = 0.1
 
-
+cur_id = 0
 
 health = 100
 MAX_HEALTH = 100
@@ -53,7 +53,7 @@ If an enemy is destroyed change the batch of the sprite to something else.
 
 class Enemy:
     #image_file is a pyglet.resource.image()
-    def __init__(self, x, y, image_file, vel_x, vel_y, idx):
+    def __init__(self, x, y, image_file, vel_x, vel_y, my_id):
         self.x = x
         self.y = y
         self.image_name = image_file
@@ -70,8 +70,8 @@ class Enemy:
         self.vel_x = vel_x
         self.vel_y = vel_y
         # add an if block for each enemy for max_speed?
-        self.max_speed = 0.5
-        self.index = idx
+        self.max_speed = 1.0
+        self.id = my_id
         '''
         Eventually I could have a health instead of just alive or dead
         '''
@@ -79,12 +79,12 @@ class Enemy:
         #eventually vel_x and vel_y will not need to be instantiated by
         # the constructor as they will be part of a basic enemy AI.
         # velocity not yet implemented
-'''
-make just one test level at first, then export them to a text file
-'''
+
+    def __eq__(self, other):
+        return self.id == other.id
 
 class Projectile:
-    def __init__(self, x, y, image): #add index parameter?
+    def __init__(self, x, y, image, my_id): #add index parameter?
         '''
         Projectile differs from Enemy in that Projectile is directly passed a
         Pyglet image whereas Enemy is passed an image name.
@@ -100,6 +100,7 @@ class Projectile:
         self.width = self.image.width
         self.vel_x = 0
         self.vel_y = 0
+        self.id = my_id
 
     def apply_movement(self):
         self.x += self.vel_x
@@ -107,16 +108,20 @@ class Projectile:
         self.sprite.x += self.vel_x
         self.sprite.y += self.vel_y
 
+    def __eq__(self, other):
+        return self.id == other.id
+
 class Bomb(Projectile):
-    def __init__(self, x, y, image):
-        super().__init__(x, y, image)
+    def __init__(self, x, y, image, my_id):
+        super().__init__(x, y, image, my_id)
         self.dest_x = x
         self.dest_y = y
         self.x = const.BOMB_X
         self.y = const.BOMB_Y
         self.sprite.x = self.x
         self.sprite.y = self.y
-        self.SPEED = 20.0
+        self.SPEED = 20
+
 
     # should only be called once, when the bomb is created
     def update_velocity(self):
@@ -192,7 +197,8 @@ for number_of_level_being_built in range(number_of_levels):
     level_enemies = []
     for i in range(number_of_enemies):
         x, y, image_file, vel_x, vel_y = level_data[line_num].split()
-        level_enemies.append(Enemy(float(x), float(y), image_file, float(vel_x), float(vel_y), i))
+        level_enemies.append(Enemy(float(x), float(y), image_file, float(vel_x), float(vel_y), cur_id))
+        cur_id += 1
         print(unpacked)
         line_num += 1
     levels.append(Level(number_of_level_being_built, level_enemies, bg_res))
@@ -208,6 +214,7 @@ def rect_collide(x1l, x1r, y1d, y1u, x2l, x2r, y2d, y2u):
     return False
 
 # https://developer.mozilla.org/en-US/docs/Games/Techniques/2D_collision_detection
+# Currently unused
 def mozilla_rect_collide(x1, y1, w1, h1, x2, y2, w2, h2):
     return x1 < x2 + w2 and x1 + w1 > x2 and y1 < y2 + h2 and h1 + y1 > y2
 
@@ -245,9 +252,32 @@ cur_char = "vac0"
 # find a way to specify the weapon later
 
 def enemy_projectile_collision(dt):
+    remove_enemies = []
+    remove_projectiles = []
     for enemy in levels[level_number].enemies:
         for projectile in levels[level_number].projectiles:
-            pass
+            #make sure rect_collide isn't too sketchy... it seems to
+            #brush past the legs of e0.png without collision
+            if rect_collide(enemy.x, enemy.x+enemy.width,
+                enemy.y, enemy.y+enemy.height,
+                projectile.x, projectile.x+projectile.width,
+                projectile.y, projectile.y+projectile.height):
+                    remove_projectiles.append(projectile)
+                    remove_enemies.append(enemy)
+    for enemy in remove_enemies:
+        if enemy in levels[level_number].enemies:
+            levels[level_number].enemies.remove(enemy)
+            ''' If statement needed here since in the double nested for loop
+            above, there could be a collision between one projectile and two
+            enemies, for example, which would append the projectile twice into
+            the projectile list. Thus we need to check if we've already removed
+            the projectile or enemy, i.e. checking if it's not in the enemies
+            list anymore/projectiles list anymore. '''
+    for projectile in remove_projectiles:
+        if projectile in levels[level_number].projectiles:
+            levels[level_number].projectiles.remove(projectile)
+
+                #print("collide")
 clock.schedule(enemy_projectile_collision)
 
 def timed_erase_dots(dt):
@@ -316,8 +346,10 @@ def on_key_press(symbol, modifiers):
             is_shop = True
 
 def add_projectile_0(x, y):
+    global cur_id
     #print("---- ({}, {})".format(x, y))
-    levels[level_number].projectiles.append(Bomb(x-const.BOMB_WIDTH/2, y-const.BOMB_HEIGHT/2, const.BOMB_IMAGE))
+    levels[level_number].projectiles.append(Bomb(x-const.BOMB_WIDTH/2, y-const.BOMB_HEIGHT/2, const.BOMB_IMAGE, cur_id))
+    cur_id += 1
     bomb = levels[level_number].projectiles[-1]
     bomb.sprite.batch = levels[level_number].projectile_batch
     bomb.update_velocity()
