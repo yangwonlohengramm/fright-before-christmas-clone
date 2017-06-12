@@ -15,9 +15,7 @@ from pyglet.window import key
 from pyglet.window import mouse
 import math
 import move # my own file!
-import constants
-
-
+import const
 
 ENEMY_DAMAGE = 0.1
 
@@ -42,6 +40,8 @@ class Level:
         self.enemies = enemies_list
         self.bg = bg_image
         self.enemies_batch = pyglet.graphics.Batch()
+        self.projectile_batch = pyglet.graphics.Batch()
+        self.projectiles = []
         for enemy in self.enemies:
             enemy.sprite.batch = self.enemies_batch
 
@@ -82,16 +82,22 @@ make just one test level at first, then export them to a text file
 '''
 
 class Projectile:
-    def __init__(self, x, y, image_file, vel_x, vel_y, idx):
-        self.x = 0
-        self.y = 0
-        self.image_name = image_file
+    def __init__(self, x, y, image): #add index parameter?
+        '''
+        Projectile differs from Enemy in that Projectile is directly passed a
+        Pyglet image whereas Enemy is passed an image name.
+        '''
+        '''
+        x and y are different from actual sprite.x and sprite.y
+        '''
+        self.x = const.BOMB_X
+        self.y = const.BOMB_Y
+        self.image = image
         self.sprite = pyglet.sprite.Sprite(self.image, x=self.x, y=self.y)
         self.height = self.image.height
         self.width = self.image.width
-        self.vel_x = vel_x
-        self.vel_y = vel_y
-        self.index = idx
+        self.vel_x = 0
+        self.vel_y = 0
 
 levels = []
 
@@ -143,8 +149,8 @@ event_loop = pyglet.app.EventLoop()
 def rect_collide(x1l, x1r, y1d, y1u, x2l, x2r, y2d, y2u):
     #(x1, y1) bottom left (x2, y2) top right, for the first rectangle
 
-    if (x1r >= x2l + constants.COLLISION_ENTRY and x1l <= x2r - constants.COLLISION_ENTRY
-        and y1u >= y2d + constants.COLLISION_ENTRY and y1d <= y2d - constants.COLLISION_ENTRY):
+    if (x1r >= x2l + const.COLLISION_ENTRY and x1l <= x2r - const.COLLISION_ENTRY
+        and y1u >= y2d + const.COLLISION_ENTRY and y1d <= y2d - const.COLLISION_ENTRY):
         return True
     return False
 
@@ -153,7 +159,7 @@ def get_time():
 
 clock.set_fps_limit(60)
 
-window = pyglet.window.Window(width = constants.WINDOW_WIDTH, height = constants.WINDOW_HEIGHT)
+window = pyglet.window.Window(width = const.WINDOW_WIDTH, height = const.WINDOW_HEIGHT)
 pyglet.gl.glClearColor(1.0,1.0,1.0,1)
 batch = pyglet.graphics.Batch()
 ################################
@@ -168,7 +174,7 @@ test_places_clicked = []
 # PLAYER CHARACTER #
 ####################
 my_x = window.width/2-image.width/2
-my_y = 50
+my_y = const.CHARACTER_VERT
 sprite = pyglet.sprite.Sprite(image, x=my_x, y=my_y, batch=batch)
 
 #As per PEP8, variable names are lowercase, word-separated by underscores
@@ -196,7 +202,8 @@ def timed_erase_dots(dt):
             idx += 1
 clock.schedule(timed_erase_dots)
 
-def move_enemies(dt):
+
+def move_all(dt):
     if is_game_over:
         return
     if is_shop:
@@ -212,7 +219,11 @@ def move_enemies(dt):
             #print(enemy.vel_x, enemy.vel_y)
             # Actually applies the velocity to the position
             move.move_enemy(enemy)
-clock.schedule(move_enemies)
+    for projectile in levels[level_number].projectiles:
+        pass
+
+
+clock.schedule(move_all)
 
 @window.event
 def on_key_press(symbol, modifiers):
@@ -248,6 +259,16 @@ def on_key_press(symbol, modifiers):
             # It is currently a fighting stage.
             is_shop = True
 
+def add_projectile_0(x, y):
+    print("---- ({}, {})".format(x, y))
+    levels[level_number].projectiles.append(Projectile(x-const.BOMB_WIDTH/2, y-const.BOMB_HEIGHT/2, const.BOMB_IMAGE))
+    bomb = levels[level_number].projectiles[-1]
+    bomb.sprite.batch = levels[level_number].projectile_batch
+
+def add_projectile(x, y):
+    print("-- ({}, {})".format(x, y))
+    if cur_char[3] == "0":
+        add_projectile_0(x, y)
 
 @window.event
 def on_mouse_press(x, y, button, modifiers):
@@ -256,7 +277,12 @@ def on_mouse_press(x, y, button, modifiers):
     if not is_shop:
         if button == mouse.LEFT:
             print("Left mouse button clicked during battle at ({}, {}).".format(x, y))
-            test_places_clicked.append([('v2i', (x, y)), ('c3B', (0, 0, 0)), get_time()])
+            #test_places_clicked.append([('v2i', (x, y)), ('c3B', (0, 0, 0)), get_time()])
+            if cur_char[:3] == "atk":
+                add_projectile(x, y)
+            # I COMMENTED OUT THE DISAPPEARING POINTS TESTER
+
+
     # Shop level
     else:
         if button == mouse.LEFT: # (!!!) make sure you can't double click this or double-ENTER during fighting
@@ -279,7 +305,7 @@ def draw_bg():
 def draw_health_bar():
     # Create sprites
     BAR_WIDTH_MULTIPLIER=2
-    X_POS = constants.WINDOW_WIDTH//2-MAX_HEALTH*BAR_WIDTH_MULTIPLIER//2
+    X_POS = const.WINDOW_WIDTH//2-MAX_HEALTH*BAR_WIDTH_MULTIPLIER//2
     Y_POS = 30
     BAR_HEIGHT = 15
     BLACK_PADDING = 2
@@ -313,8 +339,8 @@ def apply_damage(dt):
     global millis, health, is_game_over
     for enemy in levels[level_number].enemies:
         #print(int(round(time.time() * 1000)) - millis)
-        HALF_WIDTH = constants.WINDOW_WIDTH//2 - enemy.width//2
-        if (enemy.y - constants.BOTTOM_BORDER)**2 + (enemy.x - HALF_WIDTH)**2 <= constants.DANGER_RADIUS:
+        HALF_WIDTH = const.WINDOW_WIDTH//2 - enemy.width//2
+        if (enemy.y - const.BOTTOM_BORDER)**2 + (enemy.x - HALF_WIDTH)**2 <= const.DANGER_RADIUS:
             health -= ENEMY_DAMAGE
         if health <= 0:
             is_game_over = True
@@ -360,6 +386,7 @@ def on_draw():
             )
         # health bar
         draw_health_bar()
+        levels[level_number].projectile_batch.draw()
 
     # This is a shop level
     else:

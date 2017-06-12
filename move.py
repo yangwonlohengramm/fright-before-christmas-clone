@@ -1,6 +1,6 @@
 import pyglet # necessary?
 import math # necessary?
-import constants
+import const
 
 ################################################################################
 # All movement should be assuming the bottom of the screen is 60 above the
@@ -19,15 +19,15 @@ def move_enemy(enemy):
 # Current sketchiness level: 3/10
 ################################################################################
 def move_enemy_0(enemy):
-    HALF_WIDTH = constants.WINDOW_WIDTH//2 - enemy.width//2
+    HALF_WIDTH = const.WINDOW_WIDTH//2 - enemy.width//2
     # proximity
-    if (enemy.y - constants.BOTTOM_BORDER)**2 + (enemy.x - HALF_WIDTH)**2 <= constants.DANGER_RADIUS:
+    if (enemy.y - const.BOTTOM_BORDER)**2 + (enemy.x - HALF_WIDTH)**2 <= const.DANGER_RADIUS:
         enemy.vel_x = 0
         enemy.vel_y = 0
     elif enemy.x == HALF_WIDTH:
         enemy.vel_y = -enemy.max_speed
         enemy.vel_x = 0
-    elif enemy.y <= constants.BOTTOM_BORDER:
+    elif enemy.y <= const.BOTTOM_BORDER:
         enemy.vel_y = 0
         if enemy.x < HALF_WIDTH:
             enemy.vel_x = enemy.max_speed
@@ -35,9 +35,17 @@ def move_enemy_0(enemy):
             enemy.vel_x = -enemy.max_speed
     else:
         #print(enemy.x, enemy.y)
-        slope = (enemy.y - constants.BOTTOM_BORDER)/(enemy.x - HALF_WIDTH)
+        slope = (enemy.y - const.BOTTOM_BORDER)/(enemy.x - HALF_WIDTH)
         tan_of_theta = 1/slope
         radians = math.atan(tan_of_theta)
         enemy.vel_y = -math.cos(radians)*enemy.max_speed
         enemy.vel_x = -math.sin(radians)*enemy.max_speed
         degrees = radians * 180.0 / math.pi
+
+# applies velocity
+def move_projectile():
+    pass
+
+# changes
+def move_bomb(projectile):
+    pass
