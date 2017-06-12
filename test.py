@@ -14,16 +14,13 @@ from pyglet import clock
 from pyglet.window import key
 from pyglet.window import mouse
 import math
+import move # my own file!
+import constants
 
 
-WINDOW_WIDTH = 1080
-WINDOW_HEIGHT = 720
-BOTTOM_BORDER = 60
-
-DANGER_RADIUS = 10000
-COLLISION_ENTRY = 10
 
 ENEMY_DAMAGE = 0.1
+
 
 health = 100
 MAX_HEALTH = 100
@@ -116,6 +113,7 @@ line_num += 1
 I don't need vel_x vel_y input anymore, but different enemies need different things
 BRUH MAKE SUBCLASSES FOR EACH ENEMY???? :O :O
 '''
+
 for number_of_level_being_built in range(number_of_levels):
     # We are now on the "-" formatting separator line_num
     line_num += 1
@@ -145,8 +143,8 @@ event_loop = pyglet.app.EventLoop()
 def rect_collide(x1l, x1r, y1d, y1u, x2l, x2r, y2d, y2u):
     #(x1, y1) bottom left (x2, y2) top right, for the first rectangle
 
-    if (x1r >= x2l + COLLISION_ENTRY and x1l <= x2r - COLLISION_ENTRY
-        and y1u >= y2d + COLLISION_ENTRY and y1d <= y2d - COLLISION_ENTRY):
+    if (x1r >= x2l + constants.COLLISION_ENTRY and x1l <= x2r - constants.COLLISION_ENTRY
+        and y1u >= y2d + constants.COLLISION_ENTRY and y1d <= y2d - constants.COLLISION_ENTRY):
         return True
     return False
 
@@ -155,7 +153,7 @@ def get_time():
 
 clock.set_fps_limit(60)
 
-window = pyglet.window.Window(width = WINDOW_WIDTH, height = WINDOW_HEIGHT)
+window = pyglet.window.Window(width = constants.WINDOW_WIDTH, height = constants.WINDOW_HEIGHT)
 pyglet.gl.glClearColor(1.0,1.0,1.0,1)
 batch = pyglet.graphics.Batch()
 ################################
@@ -198,46 +196,6 @@ def timed_erase_dots(dt):
             idx += 1
 clock.schedule(timed_erase_dots)
 
-################################################################################
-# All movement should be assuming the bottom of the screen is 60 above the
-# actual bottom (720-60=660)
-################################################################################
-
-def move_enemy(enemy):
-    enemy.x += enemy.vel_x # technically kinda pointless
-    enemy.y += enemy.vel_y # this too
-    enemy.sprite.x += enemy.vel_x
-    enemy.sprite.y += enemy.vel_y
-
-
-################################################################################
-# Current sketchiness level: 3/10
-################################################################################
-def move_enemy_0(enemy):
-    HALF_WIDTH = WINDOW_WIDTH//2 - enemy.width//2
-    # proximity
-    if (enemy.y - BOTTOM_BORDER)**2 + (enemy.x - HALF_WIDTH)**2 <= DANGER_RADIUS:
-        enemy.vel_x = 0
-        enemy.vel_y = 0
-    elif enemy.x == HALF_WIDTH:
-        enemy.vel_y = -enemy.max_speed
-        enemy.vel_x = 0
-    elif enemy.y <= BOTTOM_BORDER:
-        enemy.vel_y = 0
-        if enemy.x < HALF_WIDTH:
-            enemy.vel_x = enemy.max_speed
-        elif enemy.x > HALF_WIDTH:
-            enemy.vel_x = -enemy.max_speed
-    else:
-        #print(enemy.x, enemy.y)
-        slope = (enemy.y - BOTTOM_BORDER)/(enemy.x - HALF_WIDTH)
-        tan_of_theta = 1/slope
-        radians = math.atan(tan_of_theta)
-        enemy.vel_y = -math.cos(radians)*enemy.max_speed
-        enemy.vel_x = -math.sin(radians)*enemy.max_speed
-        degrees = radians * 180.0 / math.pi
-
-
 def move_enemies(dt):
     if is_game_over:
         return
@@ -249,9 +207,11 @@ def move_enemies(dt):
         if enemy.alive == False:
             continue
         if enemy.image_name == "e0.png":
-            move_enemy_0(enemy)
+            # Changes the velocity of the enemy
+            move.move_enemy_0(enemy)
             #print(enemy.vel_x, enemy.vel_y)
-            move_enemy(enemy)
+            # Actually applies the velocity to the position
+            move.move_enemy(enemy)
 clock.schedule(move_enemies)
 
 @window.event
@@ -319,7 +279,7 @@ def draw_bg():
 def draw_health_bar():
     # Create sprites
     BAR_WIDTH_MULTIPLIER=2
-    X_POS = WINDOW_WIDTH//2-MAX_HEALTH*BAR_WIDTH_MULTIPLIER//2
+    X_POS = constants.WINDOW_WIDTH//2-MAX_HEALTH*BAR_WIDTH_MULTIPLIER//2
     Y_POS = 30
     BAR_HEIGHT = 15
     BLACK_PADDING = 2
@@ -347,14 +307,14 @@ def draw_health_bar():
 for now I'll do damage per frame but eventually I'll record the last damage
 time per enemy so I can do damage per second or a smaller, regular time period
 '''
-import time
+
 millis = int(round(time.time() * 1000))
 def apply_damage(dt):
     global millis, health, is_game_over
     for enemy in levels[level_number].enemies:
         #print(int(round(time.time() * 1000)) - millis)
-        HALF_WIDTH = WINDOW_WIDTH//2 - enemy.width//2
-        if (enemy.y - BOTTOM_BORDER)**2 + (enemy.x - HALF_WIDTH)**2 <= DANGER_RADIUS:
+        HALF_WIDTH = constants.WINDOW_WIDTH//2 - enemy.width//2
+        if (enemy.y - constants.BOTTOM_BORDER)**2 + (enemy.x - HALF_WIDTH)**2 <= constants.DANGER_RADIUS:
             health -= ENEMY_DAMAGE
         if health <= 0:
             is_game_over = True
