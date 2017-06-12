@@ -175,7 +175,6 @@ number_of_levels = int(unpacked[1])
 print("There are", number_of_levels, "levels")
 line_num += 1
 
-# Build the levels
 '''
 I don't need vel_x vel_y input anymore, but different enemies need different things
 BRUH MAKE SUBCLASSES FOR EACH ENEMY???? :O :O
