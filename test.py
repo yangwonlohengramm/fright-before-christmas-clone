@@ -249,7 +249,6 @@ char_options = {
         "def":[True, False, False, False, False]
         }
 cur_char = "vac0"
-# find a way to specify the weapon later
 
 def enemy_projectile_collision(dt):
     global is_shop
