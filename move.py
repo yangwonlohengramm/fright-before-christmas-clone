@@ -24,6 +24,7 @@ def move_enemy_0(enemy):
     if const.in_safe_space(enemy.x, enemy.y, enemy.width):
         enemy.vel_x = 0
         enemy.vel_y = 0
+
     elif enemy.x == HALF_WIDTH:
         enemy.vel_y = -enemy.max_speed
         enemy.vel_x = 0

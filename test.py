@@ -148,7 +148,7 @@ class Bomb(Projectile):
             '''(x+width/2, y+height/2) is the centre of the projectile image'''
             dy = self.dest_y - (const.BOMB_Y+self.height/2)
             dx = self.dest_x - (const.BOMB_X+self.width/2)
-            print(dx, dy)
+            #print(dx, dy)
             '''
             I have no idea why adding math.pi/2 would work. It's a temporary
             (read: permanent) workaround.
@@ -157,7 +157,7 @@ class Bomb(Projectile):
             self.vel_y = math.sin(radians)*self.SPEED
             self.vel_x = math.cos(radians)*self.SPEED
             degrees = radians * 180.0 / math.pi
-            print(degrees)
+            #print(degrees)
 
 
 levels = []
@@ -172,7 +172,6 @@ level_data[line_num] = level_data[line_num].rstrip()
 # We are on the first line
 unpacked = level_data[line_num].split()
 number_of_levels = int(unpacked[1])
-print("There are", number_of_levels, "levels")
 line_num += 1
 
 '''
@@ -188,12 +187,12 @@ for number_of_level_being_built in range(number_of_levels):
     # We are now on the background image specifier line
     unpacked = level_data[line_num].split()
     bg_res = unpacked[1]
-    print("This is where the bg image is at:", bg_res)
+    #print("This is where the bg image is at:", bg_res)
     line_num += 1
     # We are now on the number of enemies line
     unpacked = level_data[line_num].split()
     number_of_enemies = int(unpacked[1])
-    print("There are", number_of_enemies, "enemies")
+    #print("There are", number_of_enemies, "enemies")
     line_num += 1
     # We are now on the first enemy specification line
     level_enemies = []
@@ -201,7 +200,7 @@ for number_of_level_being_built in range(number_of_levels):
         x, y, image_file, vel_x, vel_y = level_data[line_num].split()
         level_enemies.append(Enemy(float(x), float(y), image_file, float(vel_x), float(vel_y), cur_id))
         cur_id += 1
-        print(unpacked)
+        #print(unpacked)
         line_num += 1
     levels.append(Level(number_of_level_being_built, level_enemies, bg_res))
 
@@ -310,7 +309,8 @@ def remove_out_of_window_projectiles():
         projectile.apply_movement()
         if (projectile.x + projectile.width < 0
             or projectile.x > const.WINDOW_WIDTH
-            or projectile.y > const.WINDOW_HEIGHT):
+            or projectile.y > const.WINDOW_HEIGHT
+            or projectile.y + projectile.height < 0):
                 remove_projectiles.append(projectile)
     for projectile in remove_projectiles:
         levels[level_number].projectiles.remove(projectile)
@@ -453,7 +453,17 @@ def apply_damage(dt):
     for enemy in levels[level_number].enemies:
         #print(int(round(time.time() * 1000)) - millis)
         HALF_WIDTH = const.WINDOW_WIDTH//2 - enemy.width//2
-        if (enemy.y - const.BOTTOM_BORDER)**2 + (enemy.x - HALF_WIDTH)**2 <= const.DANGER_RADIUS:
+        if const.in_safe_space(enemy.x, enemy.y, enemy.width):
+            name, extension = enemy.image_name.split(".")
+            #print(name, extension)
+            if name[-1] == "i":
+                new_name = name[:len(name)-1]+"."+extension
+                enemy.sprite.image = pyglet.resource.image(new_name)
+                enemy.image_name = new_name
+            else:
+                new_name = name+"i."+extension
+                enemy.sprite.image = pyglet.resource.image(new_name)
+                enemy.image_name = new_name
             health -= ENEMY_DAMAGE
         if health <= 0:
             is_game_over = True
