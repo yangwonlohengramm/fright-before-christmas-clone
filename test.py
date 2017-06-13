@@ -25,18 +25,8 @@ ENEMY_DAMAGE = 0.1
 
 cur_id = 0
 
-health = 100
-MAX_HEALTH = 100
 
 enemies_remaining = 0
-
-'''
-GAME STATE
-'''
-
-level_number = 0
-is_shop = False
-is_game_over = False
 
 class Level:
     #bg is a pyglet.resource.image()
@@ -227,9 +217,6 @@ clock.set_fps_limit(60)
 window = pyglet.window.Window(width = const.WINDOW_WIDTH, height = const.WINDOW_HEIGHT)
 pyglet.gl.glClearColor(1.0,1.0,1.0,1)
 batch = pyglet.graphics.Batch()
-################################
-# ENEMIES BATCH                #
-################################
 
 image = pyglet.resource.image('vac0.png')
 
@@ -249,7 +236,10 @@ char_options = {
         "atk":[True, False, False, False, False],
         "def":[True, False, False, False, False]
         }
-cur_char = "vac0"
+vac_equip = 0
+atk_equip = 0
+def_equip = 0
+cur_char = "vac" + str(vac_equip)
 
 def enemy_projectile_collision(dt):
     global is_shop, punch_time
@@ -393,7 +383,7 @@ def add_projectile(x, y):
 
 @window.event
 def on_mouse_press(x, y, button, modifiers):
-    global is_shop, level_number
+    global is_shop, level_number, cur_char, is_win, health, max_health, coins
     # Fighting level
     if not is_shop:
         if button == mouse.LEFT:
@@ -404,12 +394,39 @@ def on_mouse_press(x, y, button, modifiers):
 
 
     # Shop level
-    else:
+    elif is_shop:
+        '''
+        potion is 160x160
+        21, 700 to 150, 540 (have to translate from gimp coords to pyglet coords)
+        '''
         if button == mouse.LEFT: # (!!!) make sure you can't double click this or double-ENTER during fighting
             print("Left mouse button clicked at shop at ({}, {}).".format(x, y))
+            POTION_COST = 10
+            SWOLE_COST = 50
             if x >= 843 and y <= 120:
                 is_shop = False
                 level_number += 1
+                if level_number == len(levels):
+                    is_win = True
+                next_level_setup()
+            elif 11 <= x <= 171 and 27 <= y <= 186:
+                if coins < POTION_COST:
+                    print("You don't have enough money.")
+                elif health == max_health:
+                    print("Your health is already full!")
+                else:
+                    health = min(health+20, max_health)
+                    coins -= POTION_COST
+            elif 187 <= x <= 346 and 27 <= y <= 185:
+                if coins < SWOLE_COST:
+                    print("You don't have enough money.")
+                elif max_health == MAX_MAX_HEALTH:
+                    print("You are already at the maximum amount of maximum health.")
+                else:
+                    max_health += 50
+                    coins -= SWOLE_COST
+
+
 
 
 def draw_bg():
@@ -422,21 +439,15 @@ def draw_bg():
     bg_sprite = pyglet.sprite.Sprite(bg_image)
     bg_sprite.draw()
 
-def draw_health_bar():
+def draw_health_bar(X_POS, Y_POS):
     # Create sprites
-    BAR_WIDTH_MULTIPLIER=2
-    X_POS = const.WINDOW_WIDTH//2-MAX_HEALTH*BAR_WIDTH_MULTIPLIER//2
-    Y_POS = 30
-    BAR_HEIGHT = 15
-    BLACK_PADDING = 2
-
     black_bar_image = pyglet.resource.image("black.png")
-    black_bar_image.width=MAX_HEALTH*BAR_WIDTH_MULTIPLIER+BLACK_PADDING*2
+    black_bar_image.width=max_health*BAR_WIDTH_MULTIPLIER+BLACK_PADDING*2
     black_bar_image.height=BAR_HEIGHT+BLACK_PADDING*2
     black_bar_sprite = pyglet.sprite.Sprite(black_bar_image, x=X_POS-BLACK_PADDING, y=Y_POS-BLACK_PADDING)
 
     red_bar_image = pyglet.resource.image("red.png")
-    red_bar_image.width=MAX_HEALTH*BAR_WIDTH_MULTIPLIER
+    red_bar_image.width=max_health*BAR_WIDTH_MULTIPLIER
     red_bar_image.height=BAR_HEIGHT
     red_bar_sprite = pyglet.sprite.Sprite(red_bar_image, x=X_POS, y=Y_POS)
 
@@ -454,6 +465,11 @@ for now I'll do damage per frame but eventually I'll record the last damage
 time per enemy so I can do damage per second or a smaller, regular time period
 '''
 
+def next_level_setup():
+    global cur_char
+    cur_char = "vac" + str(vac_equip)
+    sprite.image = pyglet.resource.image(cur_char+".png")
+
 def stop_sound(dt):
     t = int(round(time.time() * 1000))
     if t > punch_time + 585:
@@ -463,6 +479,13 @@ clock.schedule(stop_sound)
 millis = int(round(time.time() * 1000))
 def apply_damage(dt):
     global millis, health, is_game_over
+    if is_shop:
+        return
+    if is_game_over:
+        return
+    if is_win:
+        return
+    # what are the other game states that are not battle?
     for enemy in levels[level_number].enemies:
         #print(int(round(time.time() * 1000)) - millis)
         HALF_WIDTH = const.WINDOW_WIDTH//2 - enemy.width//2
@@ -482,7 +505,6 @@ def apply_damage(dt):
             is_game_over = True
         #millis = int(round(time.time() * 1000))
 clock.schedule(apply_damage)
-
 
 @window.event
 def on_draw():
@@ -522,19 +544,40 @@ def on_draw():
                 place[1]
             )
         # health bar
-        draw_health_bar()
+        X_POS = const.WINDOW_WIDTH//2-max_health*BAR_WIDTH_MULTIPLIER//2
+        Y_POS = 30
+        draw_health_bar(X_POS, Y_POS)
         levels[level_number].projectile_batch.draw()
 
     # This is a shop level
     else:
         draw_bg()
-        label = pyglet.text.Label('SHOP',
+
+        X_POS = 82
+        Y_POS = 6
+        draw_health_bar(X_POS, Y_POS)
+
+        health_label = pyglet.text.Label('Health',
                                   font_name='Times New Roman',
-                                  font_size=36,
-                                  x=window.width//2, y=440,
+                                  font_size=16,
+                                  x=16, y=14,
                                   anchor_x='center', anchor_y='center',
-                                  color=(0, 0, 0, 255))
-        label.draw()
+                                  color=(0, 0, 0, 255),
+                                  multiline=True,
+                                  width=10,
+                                  bold=True)
+        health_label.draw()
+
+        coin_label = pyglet.text.Label('Money: {}'.format(coins),
+                                  font_name='Times New Roman',
+                                  font_size=16,
+                                  x=700, y=14,
+                                  anchor_x='center', anchor_y='center',
+                                  color=(0, 0, 0, 255),
+                                  bold=True)
+        coin_label.draw()
+
+
 
 
 punch_sound = pyglet.resource.media('strong-punch.wav', streaming = False)
@@ -542,5 +585,20 @@ player = pyglet.media.Player()
 player.queue(punch_sound)
 player.eos_action = player.EOS_LOOP
 punch_time = 0
+
+# GAME STATE
+level_number = 0
+coins = 1000 # change to 0 for final project
+is_shop = False
+is_win = False
+is_game_over = False
+
+# HEALTH
+BAR_WIDTH_MULTIPLIER=1
+BAR_HEIGHT = 12
+BLACK_PADDING = 2
+health = 100
+max_health = 100
+MAX_MAX_HEALTH = 500
 
 pyglet.app.run()
