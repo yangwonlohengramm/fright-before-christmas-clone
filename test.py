@@ -252,7 +252,7 @@ char_options = {
 cur_char = "vac0"
 
 def enemy_projectile_collision(dt):
-    global is_shop
+    global is_shop, punch_time
     remove_enemies = []
     remove_projectiles = []
 
@@ -277,6 +277,13 @@ def enemy_projectile_collision(dt):
         if isinstance(corresponding_enemy, Enemy):
             remove_projectiles.append(projectile)
             remove_enemies.append(corresponding_enemy)
+            '''
+            recreate a player for each time.
+            '''
+    if len(remove_enemies) != 0:
+        player.seek(0.0)
+        player.play()
+        punch_time = int(round(time.time() * 1000))
     for enemy in remove_enemies:
         levels[level_number].enemies.remove(enemy)
     for projectile in remove_projectiles:
@@ -447,6 +454,12 @@ for now I'll do damage per frame but eventually I'll record the last damage
 time per enemy so I can do damage per second or a smaller, regular time period
 '''
 
+def stop_sound(dt):
+    t = int(round(time.time() * 1000))
+    if t > punch_time + 585:
+        player.pause()
+clock.schedule(stop_sound)
+
 millis = int(round(time.time() * 1000))
 def apply_damage(dt):
     global millis, health, is_game_over
@@ -522,5 +535,12 @@ def on_draw():
                                   anchor_x='center', anchor_y='center',
                                   color=(0, 0, 0, 255))
         label.draw()
+
+
+punch_sound = pyglet.resource.media('strong-punch.wav', streaming = False)
+player = pyglet.media.Player()
+player.queue(punch_sound)
+player.eos_action = player.EOS_LOOP
+punch_time = 0
 
 pyglet.app.run()
