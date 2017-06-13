@@ -22,7 +22,7 @@ DIMENSIONS = {"atk0":(15, 15)} # obsolete-ifies BOMB_WIDTH, etc..
 '''
 WILL NOT WORK ON OTher COMPutERS
 '''
-BOMB_IMAGE = pyglet.resource.image("/home/max/Data/Projects/fright-before-christmas-clone/w0.png")
+BOMB_IMAGE = pyglet.resource.image("w0.png")
 BOMB_WIDTH = 15
 BOMB_HEIGHT = 15
 
