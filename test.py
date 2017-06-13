@@ -470,6 +470,7 @@ def apply_damage(dt):
         #millis = int(round(time.time() * 1000))
 clock.schedule(apply_damage)
 
+
 @window.event
 def on_draw():
     window.clear()
