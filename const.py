@@ -19,7 +19,10 @@ CHARACTER_VERT = 50
 DIMENSIONS = {"atk0":(15, 15)} # obsolete-ifies BOMB_WIDTH, etc..
 
 
-BOMB_IMAGE = pyglet.resource.image("w1.png")
+'''
+WILL NOT WORK ON OTher COMPutERS
+'''
+BOMB_IMAGE = pyglet.resource.image("/home/max/Data/Projects/fright-before-christmas-clone/w0.png")
 BOMB_WIDTH = 15
 BOMB_HEIGHT = 15
 
@@ -28,6 +31,9 @@ THESE CHANGE IF SCREEN DIMENSIONS CHANGE
 '''
 BOMB_X = WINDOW_WIDTH/2-BOMB_WIDTH/2-26
 BOMB_Y = 97
+
+def touching_border(x, y, sprite_width):
+    HALF_WIDTH = WINDOW_WIDTH//2 - sprite_width/2
 
 '''
 how the fuck does this math work
