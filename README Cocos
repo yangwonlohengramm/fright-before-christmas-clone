@@ -1,5 +1,0 @@
-sudo apt-get install python3-dev
-sudo pip3 install Cython
-sudo pip3 install kivy
-
-
