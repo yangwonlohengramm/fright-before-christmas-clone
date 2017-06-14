@@ -25,14 +25,20 @@ ENEMY_DAMAGE = 0.1
 
 cur_id = 0
 
-
-enemies_remaining = 0
+# How many coins does the nth enemy drop? is stored in values[n]
+values = {
+    0:1,
+    1:1,
+    2:1
+}
+# and so on...
 
 class Level:
     #bg is a pyglet.resource.image()
     def __init__(self, level_number, enemies_list, bg_image):
         self.level = level_number
         self.enemies = enemies_list
+        #self.bg and bg_image are strings
         self.bg = bg_image
         self.enemies_batch = pyglet.graphics.Batch()
         self.projectile_batch = pyglet.graphics.Batch()
@@ -50,6 +56,7 @@ class Enemy:
         self.x = x
         self.y = y
         self.image_name = image_file
+        self.value = values[int(self.image_name.split(".")[0][1:])]
         self.image = pyglet.resource.image(image_file)
         self.sprite = pyglet.sprite.Sprite(self.image, x=self.x,
                                             y=self.y)
@@ -63,7 +70,7 @@ class Enemy:
         self.vel_x = vel_x
         self.vel_y = vel_y
         # add an if block for each enemy for max_speed?
-        self.max_speed = 1.0
+        self.max_speed = 2.0
         self.id = my_id
         '''
         Eventually I could have a health instead of just alive or dead
@@ -242,7 +249,10 @@ def_equip = 0
 cur_char = "vac" + str(vac_equip)
 
 def enemy_projectile_collision(dt):
-    global is_shop, punch_time
+    if level_number >= len(levels):
+        return
+
+    global is_shop, punch_time, coins, is_win
     remove_enemies = []
     remove_projectiles = []
 
@@ -255,12 +265,21 @@ def enemy_projectile_collision(dt):
             if enemy in remove_projectiles: continue
             #make sure rect_collide isn't too sketchy... it seems to
             #brush past the legs of e0.png without collision
+
+            ''' If statement checks:
+                    - If collision occurs
+                    - If the enemy is closer to the projectile than another
+                    enemy collided with the projectile
+                    - If the collision happened on the screen
+            '''
             if (rect_collide(enemy.x, enemy.x+enemy.width,
                 enemy.y, enemy.y+enemy.height,
                 projectile.x, projectile.x+projectile.width,
                 projectile.y, projectile.y+projectile.height)
                 and ((enemy.y+enemy.height/2)-(projectile.y+projectile.height/2))**2+
-                ((enemy.x+enemy.width)-(projectile.x+projectile.width))**2 < closest_dist):
+                ((enemy.x+enemy.width)-(projectile.x+projectile.width))**2 < closest_dist
+                and -enemy.width <= enemy.x <= const.WINDOW_WIDTH
+                and enemy.y <= const.WINDOW_HEIGHT):
                     closest_dist = (((enemy.y+enemy.height/2)-(projectile.y+projectile.height/2))**2+
                     ((enemy.x+enemy.width)-(projectile.x+projectile.width))**2)
                     corresponding_enemy = enemy
@@ -275,14 +294,17 @@ def enemy_projectile_collision(dt):
         player.play()
         punch_time = int(round(time.time() * 1000))
     for enemy in remove_enemies:
+        # quick fix for ValueError: list.remove(x): x not in list:
+        ''' I thought I fixed this tho!!! '''
+        if enemy not in levels[level_number].enemies:
+            continue
+        coins += enemy.value
         levels[level_number].enemies.remove(enemy)
     for projectile in remove_projectiles:
         levels[level_number].projectiles.remove(projectile)
 
     if len(levels[level_number].enemies) == 0:
-        levels[level_number].projectiles = [] # save memory/CPU?
-        # you have beat the level.
-        is_shop = True
+        next_level_setup()
 clock.schedule(enemy_projectile_collision)
 
 def timed_erase_dots(dt):
@@ -334,7 +356,11 @@ clock.schedule(move_all)
 def on_key_press(symbol, modifiers):
     global is_shop
     #image has batch=batch so I assume batch will be modified globally too
-    global sprite, batch, image, cur_char, my_x
+    global sprite, batch, image, cur_char, my_x, coins
+
+    # cheat
+    if symbol == key.BACKSPACE:
+        coins += 100
 
     #fighting level
     if not is_shop:
@@ -362,7 +388,7 @@ def on_key_press(symbol, modifiers):
         # This is a developer-only key. It lets you skip a level.
         elif symbol == key.ENTER:
             # It is currently a fighting stage.
-            is_shop = True
+            next_level_setup()
 
 def add_projectile_0(x, y):
     global cur_id
@@ -383,7 +409,10 @@ def add_projectile(x, y):
 
 @window.event
 def on_mouse_press(x, y, button, modifiers):
-    global is_shop, level_number, cur_char, is_win, health, max_health, coins
+    '''
+    Increments level_number.
+    '''
+    global is_shop, cur_char, is_win, health, max_health, coins
     # Fighting level
     if not is_shop:
         if button == mouse.LEFT:
@@ -395,6 +424,7 @@ def on_mouse_press(x, y, button, modifiers):
 
     # Shop level
     elif is_shop:
+        global level_number
         '''
         potion is 160x160
         21, 700 to 150, 540 (have to translate from gimp coords to pyglet coords)
@@ -406,9 +436,6 @@ def on_mouse_press(x, y, button, modifiers):
             if x >= 843 and y <= 120:
                 is_shop = False
                 level_number += 1
-                if level_number == len(levels):
-                    is_win = True
-                next_level_setup()
             elif 11 <= x <= 171 and 27 <= y <= 186:
                 if coins < POTION_COST:
                     print("You don't have enough money.")
@@ -430,12 +457,16 @@ def on_mouse_press(x, y, button, modifiers):
 
 
 def draw_bg():
-    if not is_shop:
-        bg_image = pyglet.resource.image('bg'+str(level_number)+'.png')
-        sprite = pyglet.sprite.Sprite(bg_image)
-        sprite.draw()
-        return
-    bg_image = pyglet.resource.image('shop_temp.png')
+    if is_game_over:
+        bg_image = pyglet.resource.image("lose.png")
+    elif is_win:
+        bg_image = pyglet.resource.image("win.png")
+    elif not is_shop: # battle
+        #automated version below assuming bg0.png to bg#.png are ready
+        #bg_image = pyglet.resource.image('bg'+str(level_number)+'.png')
+        bg_image = pyglet.resource.image(levels[level_number].bg)
+    else:
+        bg_image = pyglet.resource.image('shop_temp.png') # shop
     bg_sprite = pyglet.sprite.Sprite(bg_image)
     bg_sprite.draw()
 
@@ -466,9 +497,17 @@ time per enemy so I can do damage per second or a smaller, regular time period
 '''
 
 def next_level_setup():
-    global cur_char
+    global cur_char, is_shop, is_win
     cur_char = "vac" + str(vac_equip)
     sprite.image = pyglet.resource.image(cur_char+".png")
+    levels[level_number].projectiles = [] # save memory/CPU?
+
+    #increment level number after clicking shop button
+    if level_number+1 < len(levels):
+        is_shop = True
+    else:
+        print("is_win")
+        is_win = True
 
 def stop_sound(dt):
     t = int(round(time.time() * 1000))
@@ -509,6 +548,7 @@ clock.schedule(apply_damage)
 @window.event
 def on_draw():
     window.clear()
+    draw_bg()
     # You lost (add menu options later)
     if is_game_over:
         label = pyglet.text.Label('You lose!\nTHE END',
@@ -522,8 +562,7 @@ def on_draw():
         label.draw()
 
     # The game has ended and you've won (past last level)
-    elif is_shop and level_number == len(levels)-1:
-        # FIX THIS
+    elif is_win:
         label = pyglet.text.Label('You win!\nTHE END',
                                   font_name='Times New Roman',
                                   font_size=36,
@@ -535,7 +574,6 @@ def on_draw():
         label.draw()
     # This is a battling level
     elif is_shop == False:
-        draw_bg()
         batch.draw()
         levels[level_number].enemies_batch.draw()
         for place in test_places_clicked:
@@ -549,10 +587,26 @@ def on_draw():
         draw_health_bar(X_POS, Y_POS)
         levels[level_number].projectile_batch.draw()
 
+        coin_label = pyglet.text.Label('Money: {}'.format(coins),
+                                  font_name='Times New Roman',
+                                  font_size=16,
+                                  x=700, y=14,
+                                  anchor_x='center', anchor_y='center',
+                                  color=(0, 0, 0, 255),
+                                  bold=True)
+        coin_label.draw()
+
+        level_label = pyglet.text.Label('LEVEL {}'.format(level_number+1),
+                                  font_name='Times New Roman',
+                                  font_size=20,
+                                  x=const.WINDOW_WIDTH/2, y=700,
+                                  anchor_x='center', anchor_y='center',
+                                  color=(0, 0, 0, 255),
+                                  bold=True)
+        level_label.draw()
+
     # This is a shop level
     else:
-        draw_bg()
-
         X_POS = 82
         Y_POS = 6
         draw_health_bar(X_POS, Y_POS)
@@ -577,6 +631,16 @@ def on_draw():
                                   bold=True)
         coin_label.draw()
 
+        level_label = pyglet.text.Label('Congrats! You just beat level {}!'.format(level_number+1),
+                                  font_name='Impact',
+                                  font_size=50,
+                                  x=const.WINDOW_WIDTH/2, y=680,
+                                  anchor_x='center', anchor_y='center',
+                                  color=(0, 0, 0, 255),
+                                  bold=True)
+        level_label.draw()
+
+
 
 
 
@@ -588,7 +652,7 @@ punch_time = 0
 
 # GAME STATE
 level_number = 0
-coins = 1000 # change to 0 for final project
+coins = 0
 is_shop = False
 is_win = False
 is_game_over = False
@@ -600,5 +664,12 @@ BLACK_PADDING = 2
 health = 100
 max_health = 100
 MAX_MAX_HEALTH = 500
+
+# bg music
+fight_music = pyglet.resource.media('epic1.wav', streaming = False)
+fight_player = pyglet.media.Player()
+fight_player.queue(fight_music)
+fight_player.eos_action = player.EOS_LOOP
+fight_player.play()
 
 pyglet.app.run()
