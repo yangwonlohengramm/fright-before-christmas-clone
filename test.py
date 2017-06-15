@@ -28,7 +28,8 @@ enemy_pics = [
     pyglet.resource.image("e1.png"),
     pyglet.resource.image("e2.png"),
     pyglet.resource.image("e3.png"),
-    pyglet.resource.image("e4.png")
+    pyglet.resource.image("e4.png"),
+    pyglet.resource.image("e5.png")
 ]
 
 ''' ENEMY_DAMAGE used to be 0.1 but now it's 0 for testing the projectiles '''
@@ -137,19 +138,31 @@ class LeftFoot(Enemy):
         self.width = self.image.width
         self.sprite = pyglet.sprite.Sprite(self.image, x=self.x,
                                             y=self.y)
-        self.max_speed = 0.5
+        self.max_speed = 1
         self.value = 1
 
 class RightFoot(Enemy):
-        def __init__(self, x, y, image_name, my_id):
-            super().__init__(x, y, image_name, my_id)
-            self.image = enemy_pics[4] #preloaded
-            self.height = self.image.height
-            self.width = self.image.width
-            self.sprite = pyglet.sprite.Sprite(self.image, x=self.x,
-                                                y=self.y)
-            self.max_speed = 0.5
-            self.value = 1
+    def __init__(self, x, y, image_name, my_id):
+        super().__init__(x, y, image_name, my_id)
+        self.image = enemy_pics[4] #preloaded
+        self.height = self.image.height
+        self.width = self.image.width
+        self.sprite = pyglet.sprite.Sprite(self.image, x=self.x,
+                                            y=self.y)
+        self.max_speed = 1
+        self.value = 1
+
+# bird that cannot walk
+class PinkBird(Enemy):
+    def __init__(self, x, y, image_name, my_id):
+        super().__init__(x, y, image_name, my_id)
+        self.image = enemy_pics[5] #preloaded
+        self.height = self.image.height
+        self.width = self.image.width
+        self.sprite = pyglet.sprite.Sprite(self.image, x=self.x,
+                                            y=self.y)
+        self.max_speed = 8
+        self.value = 3
 
 class Projectile:
     def __init__(self, x, y, image, my_id): #add index parameter?
@@ -234,6 +247,7 @@ for number_of_level_being_built in range(number_of_levels):
     number_of_enemies = sum(gen.enemies[number_of_level_being_built])
     level_enemies = gen.generate(number_of_level_being_built)
     for i in range(number_of_enemies):
+        #print(number_of_level_being_built, i, level_enemies[i])
         if level_enemies[i][2] == "e0.png":
             level_enemies[i] = GreenWing(level_enemies[i][0], level_enemies[i][1], level_enemies[i][2], level_enemies[i][3])
         elif level_enemies[i][2] == "e1.png":
@@ -244,6 +258,8 @@ for number_of_level_being_built in range(number_of_levels):
             level_enemies[i] = LeftFoot(level_enemies[i][0], level_enemies[i][1], level_enemies[i][2], level_enemies[i][3])
         elif level_enemies[i][2] == "e4.png":
             level_enemies[i] = RightFoot(level_enemies[i][0], level_enemies[i][1], level_enemies[i][2], level_enemies[i][3])
+        elif level_enemies[i][2] == "e5.png":
+            level_enemies[i] = PinkBird(level_enemies[i][0], level_enemies[i][1], level_enemies[i][2], level_enemies[i][3])
     levels.append(Level(number_of_level_being_built, level_enemies, bg_res))
 
 event_loop = pyglet.app.EventLoop()
@@ -400,7 +416,7 @@ def move_all(dt):
         # line motion
         if enemy.image_name in ["e0.png", "e1.png", "e2.png"]:
             move.move_enemy_line(enemy)
-        elif enemy.image_name in ["e3.png", "e4.png"]:
+        elif enemy.image_name in ["e3.png", "e4.png", "e5.png"]:
             move.move_enemy_hori(enemy)
 
         # Actually applies the velocity to the position
