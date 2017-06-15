@@ -169,7 +169,7 @@ class PinkBird(Enemy):
         self.width = self.image.width
         self.sprite = pyglet.sprite.Sprite(self.image, x=self.x,
                                             y=self.y)
-        self.max_speed = 8
+        self.max_speed = 4
         self.value = 3
 
 class Projectile:
@@ -375,7 +375,7 @@ def enemy_projectile_collision(dt):
     if level_number >= len(levels):
         return
 
-    global is_shop, punch_time, coins, is_win
+    global is_shop, punch_time, coins, is_win, ice_time
 
     #ATTACK
     remove_enemies = []
@@ -467,8 +467,9 @@ def enemy_projectile_collision(dt):
                         frozen_enemies.append(enemy2)
                         remove_projectiles.append(projectile)
 
-    ice_time = get_time()
+
     if len(frozen_enemies) != 0:
+        ice_time = get_time()
         ice_player.seek(0.0)
         '''audible?^^'''
         ice_player.play()
