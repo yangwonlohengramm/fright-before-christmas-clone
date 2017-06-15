@@ -292,7 +292,7 @@ window = pyglet.window.Window(width = const.WINDOW_WIDTH, height = const.WINDOW_
 pyglet.gl.glClearColor(1.0,1.0,1.0,1)
 batch = pyglet.graphics.Batch()
 
-image = pyglet.resource.image('vac0.png')
+image = pyglet.resource.image('atk0.png')
 
 test_places_clicked = []
 
@@ -313,7 +313,7 @@ char_options = {
 vac_equip = 0
 atk_equip = 0
 def_equip = 0
-cur_char = "vac" + str(vac_equip)
+cur_char = "atk" + str(atk_equip)
 
 def enemy_projectile_collision(dt):
     if level_number >= len(levels):
@@ -451,11 +451,11 @@ def on_key_press(symbol, modifiers):
         elif symbol == key.SPACE:
             # don't forget to add ".png" later
             if cur_char[:3] == "vac":
-                cur_char = "atk"+str(char_options["atk"].index(True))
-            elif cur_char[:3] == "atk":
                 cur_char = "def"+str(char_options["def"].index(True))
-            elif cur_char[:3] == "def":
+            elif cur_char[:3] == "atk":
                 cur_char = "vac"+str(char_options["vac"].index(True))
+            elif cur_char[:3] == "def":
+                cur_char = "atk"+str(char_options["atk"].index(True))
             image = pyglet.resource.image(cur_char+".png")
             sprite = pyglet.sprite.Sprite(image, x=my_x, y=my_y, batch=batch)
 
@@ -575,7 +575,7 @@ time per enemy so I can do damage per second or a smaller, regular time period
 
 def next_level_setup():
     global cur_char, is_shop, is_win
-    cur_char = "vac" + str(vac_equip)
+    cur_char = "atk" + str(atk_equip)
     sprite.image = pyglet.resource.image(cur_char+".png")
     levels[level_number].projectiles = [] # save memory/CPU?
 
