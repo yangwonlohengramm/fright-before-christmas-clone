@@ -1,0 +1,55 @@
+levels = []
+
+level_data_file = open("level_data.txt")
+level_data = level_data_file.readlines()
+level_data_file.close()
+line_num = 0
+number_of_levels = 0
+
+level_data[line_num] = level_data[line_num].rstrip()
+# We are on the first line
+unpacked = level_data[line_num].split()
+number_of_levels = int(unpacked[1])
+line_num += 1
+
+'''
+I don't need vel_x vel_y input anymore, but different enemies need different things
+BRUH MAKE SUBCLASSES FOR EACH ENEMY???? :O :O
+'''
+
+for number_of_level_being_built in range(number_of_levels):
+    # We are now on the "-" formatting separator line_num
+    #MANUAL line_num += 1
+    # We are now on the level number header line
+    #MANUAL line_num += 1
+    # We are now on the background image specifier line
+    #MANUAL unpacked = level_data[line_num].split()
+    #MANUAL bg_res = unpacked[1]
+    bg_res = "bg"+str(number_of_level_being_built%3)+".png"
+    ''' change the above soon '''
+    #print("This is where the bg image is at:", bg_res)
+    #MANUAL line_num += 1
+    # We are now on the number of enemies line
+    #MANUAL unpacked = level_data[line_num].split()
+    #MANUAL number_of_enemies = int(unpacked[1])
+    number_of_enemies = sum(gen.enemies[number_of_level_being_built])
+    #print("There are", number_of_enemies, "enemies")
+    #MANUAL line_num += 1
+    # We are now on the first enemy specification line
+    #MANUAL level_enemies = []
+    level_enemies = gen.generate(number_of_level_being_built)
+    for i in range(number_of_enemies):
+        if level_enemies[i][2] == "e0.png":
+            level_enemies[i] = GreenWing(level_enemies[i][0], level_enemies[i][1], level_enemies[i][2], level_enemies[i][3])
+        elif level_enemies[i][2] == "e1.png":
+            level_enemies[i] = RedWing(level_enemies[i][0], level_enemies[i][1], level_enemies[i][2], level_enemies[i][3])
+        #MANUAL splist = level_data[line_num].split()
+        #MANUAL x, y, image_file = splist[0], splist[1], splist[2]
+        #MANUAL if image_file == "e0.png":
+        #MANUAL     level_enemies.append(GreenWing(float(x), float(y), image_file, cur_id))
+        #MANUAL elif image_file == "e1.png":
+        #MANUAL     level_enemies.append(RedWing(float(x), float(y), image_file, cur_id))
+        #cur_id += 1
+        #print(unpacked)
+        #MANUAL line_num += 1
+    levels.append(Level(number_of_level_being_built, level_enemies, bg_res))

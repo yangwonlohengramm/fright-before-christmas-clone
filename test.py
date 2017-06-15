@@ -19,19 +19,27 @@ from pyglet.window import mouse
 import math
 import move # my own file!
 import const
+import gen
+
+# images (some are in const.py)
+# These are for before the enemies come into contact with forcefield
+enemy_pics = [
+    pyglet.resource.image("e0.png"),
+    pyglet.resource.image("e1.png"),
+    pyglet.resource.image("e2.png"),
+    pyglet.resource.image("e3.png"),
+    pyglet.resource.image("e4.png")
+]
 
 ''' ENEMY_DAMAGE used to be 0.1 but now it's 0 for testing the projectiles '''
-ENEMY_DAMAGE = 0.1
+'''
 
-cur_id = 0
 
-# How many coins does the nth enemy drop? is stored in values[n]
-values = {
-    0:1,
-    1:1,
-    2:1
-}
-# and so on...
+
+
+'''
+#all enemies do same dps for now/ever?
+ENEMY_DAMAGE = 0.2
 
 class Level:
     #bg is a pyglet.resource.image()
@@ -52,36 +60,96 @@ If an enemy is destroyed change the batch of the sprite to something else.
 
 class Enemy:
     #image_file is a pyglet.resource.image()
-    def __init__(self, x, y, image_file, vel_x, vel_y, my_id):
+    def __init__(self, x, y, image_name, my_id):
         self.x = x
         self.y = y
-        self.image_name = image_file
-        self.value = values[int(self.image_name.split(".")[0][1:])]
-        self.image = pyglet.resource.image(image_file)
-        self.sprite = pyglet.sprite.Sprite(self.image, x=self.x,
-                                            y=self.y)
+        self.image_name = image_name
         '''
         make sure to trim the images so collisions make sense
         '''
-        self.height = self.image.height
-        self.width = self.image.width
         # make self.velocity a tuple?
         # or have vx, vy
-        self.vel_x = vel_x
-        self.vel_y = vel_y
-        # add an if block for each enemy for max_speed?
-        self.max_speed = 2.0
+        self.vel_x = 0
+        self.vel_y = 0
         self.id = my_id
         '''
         Eventually I could have a health instead of just alive or dead
         '''
         self.alive = True
+        self.sprite = pyglet.sprite.Sprite(enemy_pics[0], x=self.x, y=self.y) # temp, changed in subclass
         #eventually vel_x and vel_y will not need to be instantiated by
         # the constructor as they will be part of a basic enemy AI.
         # velocity not yet implemented
 
     def __eq__(self, other):
         return self.id == other.id
+
+    def change_colour(self):
+        name, extension = self.image_name.split(".")
+        #print(name, extension)
+        if name[-1] == "i":
+            new_name = name[:len(name)-1]+"."+extension
+            self.sprite.image = pyglet.resource.image(new_name)
+            self.image_name = new_name
+        else:
+            new_name = name+"i."+extension
+            self.sprite.image = pyglet.resource.image(new_name)
+            self.image_name = new_name
+
+class GreenWing(Enemy):
+    def __init__(self, x, y, image_name, my_id):
+        super().__init__(x, y, image_name, my_id)
+        self.image = enemy_pics[0]
+        self.height = self.image.height
+        self.width = self.image.width
+        self.sprite = pyglet.sprite.Sprite(self.image, x=self.x,
+                                            y=self.y)
+        self.max_speed = 1.0
+        self.value = 1
+
+class RedWing(Enemy):
+    def __init__(self, x, y, image_name, my_id):
+        super().__init__(x, y, image_name, my_id)
+        self.image = enemy_pics[1] #preloaded
+        self.height = self.image.height
+        self.width = self.image.width
+        self.sprite = pyglet.sprite.Sprite(self.image, x=self.x,
+                                            y=self.y)
+        self.max_speed = 2.0
+        self.value = 2
+
+class BlueWing(Enemy):
+    def __init__(self, x, y, image_name, my_id):
+        super().__init__(x, y, image_name, my_id)
+        self.image = enemy_pics[2] #preloaded
+        self.height = self.image.height
+        self.width = self.image.width
+        self.sprite = pyglet.sprite.Sprite(self.image, x=self.x,
+                                            y=self.y)
+        self.max_speed = 4.0
+        self.value = 3
+
+class LeftFoot(Enemy):
+    def __init__(self, x, y, image_name, my_id):
+        super().__init__(x, y, image_name, my_id)
+        self.image = enemy_pics[3] #preloaded
+        self.height = self.image.height
+        self.width = self.image.width
+        self.sprite = pyglet.sprite.Sprite(self.image, x=self.x,
+                                            y=self.y)
+        self.max_speed = 0.5
+        self.value = 1
+
+class RightFoot(Enemy):
+        def __init__(self, x, y, image_name, my_id):
+            super().__init__(x, y, image_name, my_id)
+            self.image = enemy_pics[4] #preloaded
+            self.height = self.image.height
+            self.width = self.image.width
+            self.sprite = pyglet.sprite.Sprite(self.image, x=self.x,
+                                                y=self.y)
+            self.max_speed = 0.5
+            self.value = 1
 
 class Projectile:
     def __init__(self, x, y, image, my_id): #add index parameter?
@@ -159,46 +227,23 @@ class Bomb(Projectile):
 
 levels = []
 
-level_data_file = open("level_data.txt")
-level_data = level_data_file.readlines()
-level_data_file.close()
-line_num = 0
-number_of_levels = 0
-
-level_data[line_num] = level_data[line_num].rstrip()
-# We are on the first line
-unpacked = level_data[line_num].split()
-number_of_levels = int(unpacked[1])
-line_num += 1
-
-'''
-I don't need vel_x vel_y input anymore, but different enemies need different things
-BRUH MAKE SUBCLASSES FOR EACH ENEMY???? :O :O
-'''
-
+number_of_levels = len(gen.enemies)
 for number_of_level_being_built in range(number_of_levels):
-    # We are now on the "-" formatting separator line_num
-    line_num += 1
-    # We are now on the level number header line
-    line_num += 1
-    # We are now on the background image specifier line
-    unpacked = level_data[line_num].split()
-    bg_res = unpacked[1]
-    #print("This is where the bg image is at:", bg_res)
-    line_num += 1
-    # We are now on the number of enemies line
-    unpacked = level_data[line_num].split()
-    number_of_enemies = int(unpacked[1])
-    #print("There are", number_of_enemies, "enemies")
-    line_num += 1
-    # We are now on the first enemy specification line
-    level_enemies = []
+    bg_res = "bg"+str(number_of_level_being_built%3)+".png"
+    ''' change the above soon '''
+    number_of_enemies = sum(gen.enemies[number_of_level_being_built])
+    level_enemies = gen.generate(number_of_level_being_built)
     for i in range(number_of_enemies):
-        x, y, image_file, vel_x, vel_y = level_data[line_num].split()
-        level_enemies.append(Enemy(float(x), float(y), image_file, float(vel_x), float(vel_y), cur_id))
-        cur_id += 1
-        #print(unpacked)
-        line_num += 1
+        if level_enemies[i][2] == "e0.png":
+            level_enemies[i] = GreenWing(level_enemies[i][0], level_enemies[i][1], level_enemies[i][2], level_enemies[i][3])
+        elif level_enemies[i][2] == "e1.png":
+            level_enemies[i] = RedWing(level_enemies[i][0], level_enemies[i][1], level_enemies[i][2], level_enemies[i][3])
+        elif level_enemies[i][2] == "e2.png":
+            level_enemies[i] = BlueWing(level_enemies[i][0], level_enemies[i][1], level_enemies[i][2], level_enemies[i][3])
+        elif level_enemies[i][2] == "e3.png":
+            level_enemies[i] = LeftFoot(level_enemies[i][0], level_enemies[i][1], level_enemies[i][2], level_enemies[i][3])
+        elif level_enemies[i][2] == "e4.png":
+            level_enemies[i] = RightFoot(level_enemies[i][0], level_enemies[i][1], level_enemies[i][2], level_enemies[i][3])
     levels.append(Level(number_of_level_being_built, level_enemies, bg_res))
 
 event_loop = pyglet.app.EventLoop()
@@ -213,8 +258,12 @@ def rect_collide(x1l, x1r, y1d, y1u, x2l, x2r, y2d, y2u):
 
 # https://developer.mozilla.org/en-US/docs/Games/Techniques/2D_collision_detection
 # Currently unused
-def mozilla_rect_collide(x1, y1, w1, h1, x2, y2, w2, h2):
-    return x1 < x2 + w2 and x1 + w1 > x2 and y1 < y2 + h2 and h1 + y1 > y2
+def mozilla_rect_collide(x1l, x1r, y1d, y1u, x2l, x2r, y2d, y2u):
+    w1 = x1r-x1l
+    h1 = y1u-y1d
+    w2 = x2r-x2l
+    h2 = y2u-y2d
+    return x1l < x2l + w2 and x1l + w1 > x2l and y1d < y2d + h2 and h1 + y1d > y2d
 
 def get_time():
     return int(round(time.time() * 1000))
@@ -265,6 +314,7 @@ def enemy_projectile_collision(dt):
             if enemy in remove_projectiles: continue
             #make sure rect_collide isn't too sketchy... it seems to
             #brush past the legs of e0.png without collision
+            #fuck it i'm trying mozilla_rect_collide
 
             ''' If statement checks:
                     - If collision occurs
@@ -272,7 +322,7 @@ def enemy_projectile_collision(dt):
                     enemy collided with the projectile
                     - If the collision happened on the screen
             '''
-            if (rect_collide(enemy.x, enemy.x+enemy.width,
+            if (mozilla_rect_collide(enemy.x, enemy.x+enemy.width,
                 enemy.y, enemy.y+enemy.height,
                 projectile.x, projectile.x+projectile.width,
                 projectile.y, projectile.y+projectile.height)
@@ -344,11 +394,17 @@ def move_all(dt):
     for enemy in levels[level_number].enemies:
         if enemy.alive == False:
             continue
-        if enemy.image_name == "e0.png":
-            # Changes the velocity of the enemy
-            move.move_enemy_0(enemy)
-            # Actually applies the velocity to the position
-            move.move_enemy(enemy)
+
+        # Changes the velocity of the enemy
+
+        # line motion
+        if enemy.image_name in ["e0.png", "e1.png", "e2.png"]:
+            move.move_enemy_line(enemy)
+        elif enemy.image_name in ["e3.png", "e4.png"]:
+            move.move_enemy_hori(enemy)
+
+        # Actually applies the velocity to the position
+        move.move_enemy(enemy)
     remove_out_of_window_projectiles()
 clock.schedule(move_all)
 
@@ -391,10 +447,9 @@ def on_key_press(symbol, modifiers):
             next_level_setup()
 
 def add_projectile_0(x, y):
-    global cur_id
     #print("---- ({}, {})".format(x, y))
-    levels[level_number].projectiles.append(Bomb(x-const.BOMB_WIDTH/2, y-const.BOMB_HEIGHT/2, const.BOMB_IMAGE, cur_id))
-    cur_id += 1
+    levels[level_number].projectiles.append(Bomb(x-const.BOMB_WIDTH/2, y-const.BOMB_HEIGHT/2, const.BOMB_IMAGE, gen.cur_id))
+    gen.cur_id += 1
     bomb = levels[level_number].projectiles[-1]
     bomb.sprite.batch = levels[level_number].projectile_batch
     bomb.update_velocity()
@@ -402,7 +457,14 @@ def add_projectile_0(x, y):
 def add_projectile(x, y):
     #print("-- ({}, {})".format(x, y))
     ''' CURRENTLY THIS ONLY USES THE X-VALUE TO DETERMINE SAFE-SPACE COLLISIONS '''
-    if const.in_safe_space(x, y, const.DIMENSIONS[cur_char][0]):
+    #if const.in_safe_space(x, y, const.DIMENSIONS[cur_char][0]):
+    #    return
+    # I want to shoot even if I'm slightly in the safe sapce
+    '''change this to automate adding more weapons'''
+    if cur_char[3] == "0":
+        object_width = 15
+    HALF_WIDTH = const.WINDOW_WIDTH/2 - object_width/2
+    if (y - const.BOTTOM_BORDER)**2 + (x - HALF_WIDTH)**2 <= const.DANGER_RADIUS/4:
         return
     if cur_char[3] == "0":
         add_projectile_0(x, y)
@@ -452,9 +514,6 @@ def on_mouse_press(x, y, button, modifiers):
                 else:
                     max_health += 50
                     coins -= SWOLE_COST
-
-
-
 
 def draw_bg():
     if is_game_over:
@@ -506,7 +565,6 @@ def next_level_setup():
     if level_number+1 < len(levels):
         is_shop = True
     else:
-        print("is_win")
         is_win = True
 
 def stop_sound(dt):
@@ -529,16 +587,7 @@ def apply_damage(dt):
         #print(int(round(time.time() * 1000)) - millis)
         HALF_WIDTH = const.WINDOW_WIDTH//2 - enemy.width//2
         if const.in_safe_space(enemy.x, enemy.y, enemy.width):
-            name, extension = enemy.image_name.split(".")
-            #print(name, extension)
-            if name[-1] == "i":
-                new_name = name[:len(name)-1]+"."+extension
-                enemy.sprite.image = pyglet.resource.image(new_name)
-                enemy.image_name = new_name
-            else:
-                new_name = name+"i."+extension
-                enemy.sprite.image = pyglet.resource.image(new_name)
-                enemy.image_name = new_name
+            enemy.change_colour()
             health -= ENEMY_DAMAGE
         if health <= 0:
             is_game_over = True
@@ -633,7 +682,7 @@ def on_draw():
 
         level_label = pyglet.text.Label('Congrats! You just beat level {}!'.format(level_number+1),
                                   font_name='Impact',
-                                  font_size=50,
+                                  font_size=40,
                                   x=const.WINDOW_WIDTH/2, y=680,
                                   anchor_x='center', anchor_y='center',
                                   color=(0, 0, 0, 255),
@@ -666,10 +715,11 @@ max_health = 100
 MAX_MAX_HEALTH = 500
 
 # bg music
-fight_music = pyglet.resource.media('epic1.wav', streaming = False)
+fight_music = pyglet.resource.media('epic2.wav', streaming = False)
 fight_player = pyglet.media.Player()
 fight_player.queue(fight_music)
 fight_player.eos_action = player.EOS_LOOP
 fight_player.play()
+
 
 pyglet.app.run()

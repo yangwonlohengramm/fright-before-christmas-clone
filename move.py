@@ -18,7 +18,7 @@ def move_enemy(enemy):
 ################################################################################
 # Current sketchiness level: 3/10
 ################################################################################
-def move_enemy_0(enemy):
+def move_enemy_line(enemy):
     # proximity
     HALF_WIDTH = const.WINDOW_WIDTH/2 - enemy.width/2
     if const.in_safe_space(enemy.x, enemy.y, enemy.width):
@@ -42,3 +42,12 @@ def move_enemy_0(enemy):
         enemy.vel_y = -math.cos(radians)*enemy.max_speed
         enemy.vel_x = -math.sin(radians)*enemy.max_speed
         degrees = radians * 180.0 / math.pi
+
+def move_enemy_hori(enemy):
+    if const.in_safe_space(enemy.x, enemy.y, enemy.width):
+        enemy.vel_x = 0
+    if enemy.x < 540:
+        enemy.vel_x = enemy.max_speed
+    else:
+        enemy.vel_x = -enemy.max_speed
+    enemy.vel_y = 0

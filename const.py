@@ -29,8 +29,8 @@ BOMB_HEIGHT = 15
 '''
 THESE CHANGE IF SCREEN DIMENSIONS CHANGE
 '''
-BOMB_X = WINDOW_WIDTH/2-BOMB_WIDTH/2-26
-BOMB_Y = 97
+BOMB_X = 535
+BOMB_Y = 80
 
 def touching_border(x, y, sprite_width):
     HALF_WIDTH = WINDOW_WIDTH//2 - sprite_width/2
