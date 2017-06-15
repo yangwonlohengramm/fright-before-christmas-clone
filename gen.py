@@ -38,37 +38,37 @@ def gen1(level_number):
 
 def gen2(level_number):
     if sum(enemies[level_number][:3]) <= 20:
-        x = randrange(-600, 1700)
-        y = randrange(300, 1200)
+        x = randrange(-400, 1500)
+        y = randrange(300, 1100)
     elif sum(enemies[level_number][:3]) <= 40:
-        x = randrange(-1200, 2300)
-        y = randrange(300, 1800)
+        x = randrange(-900, 2000)
+        y = randrange(300, 1600)
     elif sum(enemies[level_number][:3]) <= 60:
-        x = randrange(-1800, 2900)
-        y = randrange(300, 2400)
+        x = randrange(-1400, 2500)
+        y = randrange(300, 2100)
     else:
-        x = randrange(-2000, 3500)
-        y = randrange(300, 3000)
+        x = randrange(-1900, 3000)
+        y = randrange(300, 2600)
     return (x, y, "e2.png", cur_id)
 
 def gen3(level_number):
     if enemies[level_number][3] + enemies[level_number][5]/2 <= 5:
-        x = randrange(-50, 240)
+        x = randrange(-100, 240)
     elif enemies[level_number][3] + enemies[level_number][5]/2 <= 10:
-        x = randrange(-150, 240)
+        x = randrange(-200, 240)
     else:
-        x = randrange(-250, 240)
+        x = randrange(-350, 240)
     y = 60
     return (x, y, "e3.png", cur_id)
 
 
 def gen4(level_number):
     if enemies[level_number][4] + enemies[level_number][5]/2 <= 5:
-        x = randrange(840, 1150)
+        x = randrange(840, 1200)
     elif enemies[level_number][4] + enemies[level_number][5]/2 <= 10:
-        x = randrange(840, 1250)
+        x = randrange(840, 1300)
     else:
-        x = randrange(840, 1350)
+        x = randrange(840, 1400)
     y = 60
     return (x, y, "e4.png", cur_id)
 
@@ -131,5 +131,6 @@ enemies = [
     (0, 2, 20, 3, 3, 0),
     (0, 0, 40, 5, 5, 0),
     (10, 5, 10, 0, 0, 5),
-    (10, 20, 30, 5, 5, 5)
+    (10, 20, 30, 5, 5, 5),
+    (0, 0, 100, 0, 0, 20)
 ]

@@ -34,18 +34,55 @@ enemy_pics = [
     pyglet.resource.image("e5.png")
 ]
 
-
-
 no_batch = pyglet.graphics.Batch()
 ''' ENEMY_DAMAGE used to be 0.1 but now it's 0 for testing the projectiles '''
 '''
 
-
-
-
 '''
 #all enemies do same dps for now/ever?
 ENEMY_DAMAGE = 0.2
+
+event_loop = pyglet.app.EventLoop()
+
+clock.set_fps_limit(60)
+
+window = pyglet.window.Window(width = const.WINDOW_WIDTH, height = const.WINDOW_HEIGHT)
+pyglet.gl.glClearColor(1.0,1.0,1.0,1)
+batch = pyglet.graphics.Batch()
+
+ice_batch = pyglet.graphics.Batch()
+
+image = pyglet.resource.image('atk0.png')
+
+test_places_clicked = []
+
+####################
+# PLAYER CHARACTER #
+####################
+my_x = window.width/2-image.width/2
+my_y = const.CHARACTER_VERT
+sprite = pyglet.sprite.Sprite(image, x=my_x, y=my_y, batch=batch)
+
+#As per PEP8, variable names are lowercase, word-separated by underscores
+#options are from 0-4 currently, with none being operation and only 0 drawn
+char_options = {
+        "vac":[True, False, False, False, False],
+        "atk":[True, False, False, False, False],
+        "def":[True, False, False, False, False]
+        }
+vac_equip = 0
+atk_equip = 0
+def_equip = 0
+cur_char = "atk" + str(atk_equip)
+
+#####
+# Shop
+#####
+swole_cost = 50
+swole_level = 0
+regen_level = 0
+regen_cost = 50
+
 
 class Level:
     #bg is a pyglet.resource.image()
@@ -59,10 +96,6 @@ class Level:
         self.projectiles = []
         for enemy in self.enemies:
             enemy.sprite.batch = self.enemies_batch
-
-'''
-If an enemy is destroyed change the batch of the sprite to something else.
-'''
 
 class Enemy:
     #image_file is a pyglet.resource.image()
@@ -160,7 +193,6 @@ class RightFoot(Enemy):
         self.max_speed = 1
         self.value = 1
 
-# bird that cannot walk
 class PinkBird(Enemy):
     def __init__(self, x, y, image_name, my_id):
         super().__init__(x, y, image_name, my_id)
@@ -218,7 +250,6 @@ class Bomb(Projectile):
     # should only be called once, when the bomb is created
     def update_velocity(self):
         HALF_WIDTH = const.WINDOW_WIDTH//2 - self.width//2
-
         if (const.BOMB_X+self.width/2) - self.dest_x == 0:
             self.vel_x = 0
             self.vel_y = self.SPEED
@@ -231,22 +262,13 @@ class Bomb(Projectile):
                 self.vel_x = self.SPEED
                 self.vel_y = 0
         else:
-            '''
-            ATAN2 IS FUCKING BLESSED!!!!
-            '''
             '''(x+width/2, y+height/2) is the centre of the projectile image'''
             dy = self.dest_y - (const.BOMB_Y+self.height/2)
             dx = self.dest_x - (const.BOMB_X+self.width/2)
-            #print(dx, dy)
-            '''
-            I have no idea why adding math.pi/2 would work. It's a temporary
-            (read: permanent) workaround.
-            '''
-            radians = math.atan2(dy, dx)# + math.pi/2
+            radians = math.atan2(dy, dx)
             self.vel_y = math.sin(radians)*self.SPEED
             self.vel_x = math.cos(radians)*self.SPEED
             degrees = radians * 180.0 / math.pi
-            #print(degrees)
 
 class FrostPotion(Projectile):
     def __init__(self, x, y, image, my_id):
@@ -276,23 +298,12 @@ class FrostPotion(Projectile):
                 self.vel_x = self.SPEED
                 self.vel_y = 0
         else:
-            '''
-            ATAN2 IS FUCKING BLESSED!!!!
-            '''
-            '''(x+width/2, y+height/2) is the centre of the projectile image'''
             dy = self.dest_y - (const.FROST_POTION_Y+self.height/2)
             dx = self.dest_x - (const.FROST_POTION_X+self.width/2)
-            #print(dx, dy)
-            '''
-            I have no idea why adding math.pi/2 would work. It's a temporary
-            (read: permanent) workaround.
-            '''
             radians = math.atan2(dy, dx)# + math.pi/2
             self.vel_y = math.sin(radians)*self.SPEED
             self.vel_x = math.cos(radians)*self.SPEED
             degrees = radians * 180.0 / math.pi
-            #print(degrees)
-
 
 levels = []
 
@@ -318,18 +329,7 @@ for number_of_level_being_built in range(number_of_levels):
             level_enemies[i] = PinkBird(level_enemies[i][0], level_enemies[i][1], level_enemies[i][2], level_enemies[i][3])
     levels.append(Level(number_of_level_being_built, level_enemies, bg_res))
 
-event_loop = pyglet.app.EventLoop()
-
-def rect_collide(x1l, x1r, y1d, y1u, x2l, x2r, y2d, y2u):
-    #(x1, y1) bottom left (x2, y2) top right, for the first rectangle
-
-    if (x1r >= x2l + const.COLLISION_ENTRY and x1l <= x2r - const.COLLISION_ENTRY
-        and y1u >= y2d + const.COLLISION_ENTRY and y1d <= y2d - const.COLLISION_ENTRY):
-        return True
-    return False
-
 # https://developer.mozilla.org/en-US/docs/Games/Techniques/2D_collision_detection
-# Currently unused
 def mozilla_rect_collide(x1l, x1r, y1d, y1u, x2l, x2r, y2d, y2u):
     w1 = x1r-x1l
     h1 = y1u-y1d
@@ -339,37 +339,6 @@ def mozilla_rect_collide(x1l, x1r, y1d, y1u, x2l, x2r, y2d, y2u):
 
 def get_time():
     return int(round(time.time() * 1000))
-
-clock.set_fps_limit(60)
-
-window = pyglet.window.Window(width = const.WINDOW_WIDTH, height = const.WINDOW_HEIGHT)
-pyglet.gl.glClearColor(1.0,1.0,1.0,1)
-batch = pyglet.graphics.Batch()
-
-ice_batch = pyglet.graphics.Batch()
-
-image = pyglet.resource.image('atk0.png')
-
-test_places_clicked = []
-
-####################
-# PLAYER CHARACTER #
-####################
-my_x = window.width/2-image.width/2
-my_y = const.CHARACTER_VERT
-sprite = pyglet.sprite.Sprite(image, x=my_x, y=my_y, batch=batch)
-
-#As per PEP8, variable names are lowercase, word-separated by underscores
-#options are from 0-4 currently, with none being operation and only 0 drawn
-char_options = {
-        "vac":[True, False, False, False, False],
-        "atk":[True, False, False, False, False],
-        "def":[True, False, False, False, False]
-        }
-vac_equip = 0
-atk_equip = 0
-def_equip = 0
-cur_char = "atk" + str(atk_equip)
 
 def enemy_projectile_collision(dt):
     if level_number >= len(levels):
@@ -390,9 +359,6 @@ def enemy_projectile_collision(dt):
             continue
         for enemy in levels[level_number].enemies:
             if enemy in remove_projectiles: continue
-            #make sure rect_collide isn't too sketchy... it seems to
-            #brush past the legs of e0.png without collision
-            #fuck it i'm trying mozilla_rect_collide
 
             ''' If statement checks:
                     - If collision occurs
@@ -435,6 +401,7 @@ def enemy_projectile_collision(dt):
         next_level_setup()
 
     #DEFENCE
+    collided = []
     frozen_enemies = []
     remove_projectiles = []
 
@@ -444,34 +411,25 @@ def enemy_projectile_collision(dt):
         if projectile in remove_projectiles:
             continue
         for enemy in levels[level_number].enemies:
-            #make sure rect_collide isn't too sketchy... it seems to
-            #brush past the legs of e0.png without collision
-            #fuck it i'm trying mozilla_rect_collide
-
-            ''' If statement checks:
-                    - If collision occurs
-                    - If the enemy is closer to the projectile than another
-                    enemy collided with the projectile
-                    - If the collision happened on the screen
-            '''
             if (mozilla_rect_collide(enemy.x, enemy.x+enemy.width,
                 enemy.y, enemy.y+enemy.height,
                 projectile.x, projectile.x+projectile.width,
                 projectile.y, projectile.y+projectile.height)
                 and -enemy.width <= enemy.x <= const.WINDOW_WIDTH
                 and enemy.y <= const.WINDOW_HEIGHT):
-                for enemy2 in levels[level_number].enemies:
-                    if (((enemy2.x+enemy2.width/2) - (projectile.x+projectile.width/2))**2
-                        + ((enemy2.y+enemy2.height/2) - (projectile.y+projectile.height/2))**2
-                        <= 10000):
-                        frozen_enemies.append(enemy2)
-                        remove_projectiles.append(projectile)
+                collided.append(projectile)
+                break
 
-
+    for projectile in collided:
+        for enemy in levels[level_number].enemies:
+            if (((enemy.x+enemy.width/2) - (projectile.x+projectile.width/2))**2
+                + ((enemy.y+enemy.height/2) - (projectile.y+projectile.height/2))**2
+                <= 10000):
+                frozen_enemies.append(enemy)
+                remove_projectiles.append(projectile)
     if len(frozen_enemies) != 0:
         ice_time = get_time()
         ice_player.seek(0.0)
-        '''audible?^^'''
         ice_player.play()
     for enemy in frozen_enemies:
         if enemy not in levels[level_number].enemies:
@@ -486,19 +444,6 @@ def enemy_projectile_collision(dt):
         levels[level_number].projectiles.remove(projectile)
 
 clock.schedule(enemy_projectile_collision)
-
-def timed_erase_dots(dt):
-    cur_time = get_time()
-    idx = 0
-    while idx < len(test_places_clicked):
-        diff_time = cur_time-test_places_clicked[idx][2]
-        if diff_time > 1000:
-            test_places_clicked.pop(idx)
-        else:
-            idx += 1
-#####
-# clock.schedule(timed_erase_dots)
-#####
 
 def remove_out_of_window_projectiles():
     # The following removes projectiles that are outside the window.
@@ -641,7 +586,8 @@ def on_mouse_press(x, y, button, modifiers):
     '''
     Increments level_number.
     '''
-    global is_shop, cur_char, is_win, health, max_health, coins
+    global is_shop, cur_char, is_win, health, max_health, coins, swole_cost
+    global level_number, regen_level, regen_cost, swole_level
     # Fighting level
     if not is_shop:
         if button == mouse.LEFT:
@@ -653,7 +599,6 @@ def on_mouse_press(x, y, button, modifiers):
 
     # Shop level
     elif is_shop:
-        global level_number
         '''
         potion is 160x160
         21, 700 to 150, 540 (have to translate from gimp coords to pyglet coords)
@@ -661,7 +606,6 @@ def on_mouse_press(x, y, button, modifiers):
         if button == mouse.LEFT: # (!!!) make sure you can't double click this or double-ENTER during fighting
             print("Left mouse button clicked at shop at ({}, {}).".format(x, y))
             POTION_COST = 10
-            SWOLE_COST = 50
             if x >= 843 and y <= 120:
                 is_shop = False
                 level_number += 1
@@ -674,13 +618,24 @@ def on_mouse_press(x, y, button, modifiers):
                     health = min(health+20, max_health)
                     coins -= POTION_COST
             elif 187 <= x <= 346 and 27 <= y <= 185:
-                if coins < SWOLE_COST:
+                if coins < swole_cost:
                     print("You don't have enough money.")
                 elif max_health == MAX_MAX_HEALTH:
                     print("You are already at the maximum amount of maximum health.")
                 else:
                     max_health += 50
-                    coins -= SWOLE_COST
+                    coins -= swole_cost
+                    swole_cost += 20
+                    swole_level += 1
+            elif 364 <= x <= 523 and 27 <= y <= 186:
+                if coins < regen_cost:
+                    print("You don't have enough money.")
+                elif regen_level == 10:
+                    print("You are already at regeneration level 10, which is the maximum.")
+                else:
+                    regen_level += 1
+                    coins -= regen_cost
+                    regen_cost += 80
 
 def draw_bg():
     if is_game_over:
@@ -744,8 +699,13 @@ def stop_sound(dt):
 clock.schedule(stop_sound)
 
 millis = int(round(time.time() * 1000))
+#######
+# Applies damage AND regen.
+#####
 def apply_damage(dt):
-    global millis, health, is_game_over
+    global health
+    global millis, is_game_over
+    health = min(health + 0.02*regen_level, max_health)
     if is_shop:
         return
     if is_game_over:
@@ -847,6 +807,8 @@ def on_draw():
         Y_POS = 6
         draw_health_bar(X_POS, Y_POS)
 
+        shop_batch = pyglet.graphics.Batch()
+
         health_label = pyglet.text.Label('Health',
                                   font_name='Times New Roman',
                                   font_size=16,
@@ -855,17 +817,17 @@ def on_draw():
                                   color=(0, 0, 0, 255),
                                   multiline=True,
                                   width=10,
-                                  bold=True)
-        health_label.draw()
+                                  bold=True,
+                                  batch = shop_batch)
 
         coin_label = pyglet.text.Label('Money: {}'.format(coins),
                                   font_name='Times New Roman',
                                   font_size=16,
-                                  x=700, y=14,
+                                  x=740, y=14,
                                   anchor_x='center', anchor_y='center',
                                   color=(0, 0, 0, 255),
-                                  bold=True)
-        coin_label.draw()
+                                  bold=True,
+                                  batch = shop_batch)
 
         level_label = pyglet.text.Label('Congrats! You just beat level {}!'.format(level_number+1),
                                   font_name='Impact',
@@ -873,8 +835,70 @@ def on_draw():
                                   x=const.WINDOW_WIDTH/2, y=680,
                                   anchor_x='center', anchor_y='center',
                                   color=(0, 0, 0, 255),
-                                  bold=True)
-        level_label.draw()
+                                  bold=True,
+                                  batch = shop_batch)
+
+        potion_cost_label = pyglet.text.Label('Cost: 10'.format(level_number+1),
+                                  font_name='Impact',
+                                  font_size=16,
+                                  x=90, y=290,
+                                  anchor_x='center', anchor_y='center',
+                                  color=(0, 0, 0, 255),
+                                  batch = shop_batch)
+
+        swole_cost_label = pyglet.text.Label('Cost: {}'.format(swole_cost),
+                                  font_name='Impact',
+                                  font_size=16,
+                                  x=265, y=290,
+                                  anchor_x='center', anchor_y='center',
+                                  color=(0, 0, 0, 255),
+                                  batch = shop_batch)
+
+        iv_label_top = pyglet.text.Label('Get Swole',
+                                  font_name='Arial',
+                                  font_size=12,
+                                  x=265, y=258,
+                                  anchor_x='center', anchor_y='center',
+                                  color=(0, 0, 0, 255),
+                                  bold=True,
+                                  batch = shop_batch)
+        iv_label_bottom = pyglet.text.Label('Raise your max health (Currently at level {}).'.format(swole_level),
+                                  font_name='Arial',
+                                  font_size=10,
+                                  x=275, y=230,
+                                  multiline=True,
+                                  width=150,
+                                  anchor_x='center', anchor_y='center',
+                                  color=(0, 0, 0, 255),
+                                  batch = shop_batch)
+
+        iv_cost_label = pyglet.text.Label('Cost: {}'.format(regen_cost),
+                                  font_name='Impact',
+                                  font_size=16,
+                                  x=445, y=290,
+                                  anchor_x='center', anchor_y='center',
+                                  color=(0, 0, 0, 255),
+                                  batch = shop_batch)
+
+        iv_label_top = pyglet.text.Label('IV Drip',
+                                  font_name='Arial',
+                                  font_size=12,
+                                  x=445, y=258,
+                                  anchor_x='center', anchor_y='center',
+                                  color=(0, 0, 0, 255),
+                                  bold=True,
+                                  batch = shop_batch)
+        iv_label_bottom = pyglet.text.Label('Improve your regeneration (Currently at level {}).'.format(regen_level),
+                                  font_name='Arial',
+                                  font_size=10,
+                                  x=445, y=230,
+                                  multiline=True,
+                                  width=150,
+                                  anchor_x='center', anchor_y='center',
+                                  color=(0, 0, 0, 255),
+                                  batch = shop_batch)
+
+        shop_batch.draw()
 
 
 
@@ -905,7 +929,7 @@ BAR_HEIGHT = 12
 BLACK_PADDING = 2
 health = 100
 max_health = 100
-MAX_MAX_HEALTH = 500
+MAX_MAX_HEALTH = 600
 
 # bg music
 fight_music = pyglet.resource.media('epic2.wav', streaming = False)
