@@ -167,7 +167,10 @@ class PinkBird(Enemy):
         self.value = 3
 
 class Projectile:
+    last_time = 0
+
     def __init__(self, x, y, image, my_id): #add index parameter?
+        global last_time
         '''
         Projectile differs from Enemy in that Projectile is directly passed a
         Pyglet image whereas Enemy is passed an image name.
@@ -472,6 +475,28 @@ def add_projectile_0(x, y):
     bomb.sprite.batch = levels[level_number].projectile_batch
     bomb.update_velocity()
 
+def can_fire():
+    #cur_time = get_time()
+    #print(cur_time, Projectile.last_time, cur_time-Projectile.last_time, RELOAD_TIME)
+    return get_time() - Projectile.last_time >= RELOAD_TIME
+
+def auto_character_change(dt):
+    ''' AUTO-CHANGE CHARACTER SKINS '''
+    if can_fire() and cur_char[:3] in ["atk", "def"]:
+        if cur_char[:3] == "atk":
+            ''' make it so that i don't have to create an image each frame THIS IS SO INEFFICIENT'''
+            sprite.image = pyglet.resource.image(cur_char[:3]+str(atk_equip)+"i.png")
+        elif cur_char[:3] == "def":
+            sprite.image = pyglet.resource.image(cur_char[:3]+str(def_equip)+"i.png")
+    else:
+        if cur_char[:3] == "atk":
+            sprite.image = pyglet.resource.image(cur_char[:3]+str(atk_equip)+".png")
+        elif cur_char[:3] == "def":
+            sprite.image = pyglet.resource.image(cur_char[:3]+str(def_equip)+".png")
+        elif cur_char[:3] == "vac":
+            sprite.image = pyglet.resource.image(cur_char[:3]+str(vac_equip)+".png")
+clock.schedule(auto_character_change)
+
 def add_projectile(x, y):
     #print("-- ({}, {})".format(x, y))
     ''' CURRENTLY THIS ONLY USES THE X-VALUE TO DETERMINE SAFE-SPACE COLLISIONS '''
@@ -484,6 +509,10 @@ def add_projectile(x, y):
     HALF_WIDTH = const.WINDOW_WIDTH/2 - object_width/2
     if (y - const.BOTTOM_BORDER)**2 + (x - HALF_WIDTH)**2 <= const.DANGER_RADIUS/4:
         return
+    if not can_fire():
+        return
+    Projectile.last_time = get_time()
+    print(Projectile.last_time)
     if cur_char[3] == "0":
         add_projectile_0(x, y)
 
@@ -738,6 +767,9 @@ fight_player = pyglet.media.Player()
 fight_player.queue(fight_music)
 fight_player.eos_action = player.EOS_LOOP
 fight_player.play()
+
+RELOAD_TIME = 500
+
 
 
 pyglet.app.run()
