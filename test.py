@@ -34,6 +34,9 @@ enemy_pics = [
     pyglet.resource.image("e5.png")
 ]
 
+
+
+no_batch = pyglet.graphics.Batch()
 ''' ENEMY_DAMAGE used to be 0.1 but now it's 0 for testing the projectiles '''
 '''
 
@@ -75,6 +78,7 @@ class Enemy:
         self.vel_x = 0
         self.vel_y = 0
         self.id = my_id
+        self.freeze_time = 0
         '''
         Eventually I could have a health instead of just alive or dead
         '''
@@ -83,6 +87,8 @@ class Enemy:
         #eventually vel_x and vel_y will not need to be instantiated by
         # the constructor as they will be part of a basic enemy AI.
         # velocity not yet implemented
+        self.ice_sprite = pyglet.sprite.Sprite(pyglet.resource.image("ice.png"), x=self.x-20, y=self.y-80, batch=no_batch)
+        '''sketch ^^^'''
 
     def __eq__(self, other):
         return self.id == other.id
@@ -242,6 +248,51 @@ class Bomb(Projectile):
             degrees = radians * 180.0 / math.pi
             #print(degrees)
 
+class FrostPotion(Projectile):
+    def __init__(self, x, y, image, my_id):
+        super().__init__(x, y, image, my_id)
+        self.dest_x = x
+        self.dest_y = y
+        self.x = const.FROST_POTION_X
+        self.y = const.FROST_POTION_Y
+        self.sprite.x = self.x
+        self.sprite.y = self.y
+        self.SPEED = 20
+
+
+    # should only be called once, when the bomb is created
+    def update_velocity(self):
+        HALF_WIDTH = const.WINDOW_WIDTH//2 - self.width//2
+
+        if (const.FROST_POTION_X+self.width/2) - self.dest_x == 0:
+            self.vel_x = 0
+            self.vel_y = self.SPEED
+        elif (const.FROST_POTION_Y+self.height/2) - self.dest_y == 0:
+            if self.dest_x <= const.BOMB_X:
+                ''' note the equals '''
+                self.vel_x = -self.SPEED
+                self.vel_y = 0
+            elif self.dest_x > const.BOMB_X:
+                self.vel_x = self.SPEED
+                self.vel_y = 0
+        else:
+            '''
+            ATAN2 IS FUCKING BLESSED!!!!
+            '''
+            '''(x+width/2, y+height/2) is the centre of the projectile image'''
+            dy = self.dest_y - (const.FROST_POTION_Y+self.height/2)
+            dx = self.dest_x - (const.FROST_POTION_X+self.width/2)
+            #print(dx, dy)
+            '''
+            I have no idea why adding math.pi/2 would work. It's a temporary
+            (read: permanent) workaround.
+            '''
+            radians = math.atan2(dy, dx)# + math.pi/2
+            self.vel_y = math.sin(radians)*self.SPEED
+            self.vel_x = math.cos(radians)*self.SPEED
+            degrees = radians * 180.0 / math.pi
+            #print(degrees)
+
 
 levels = []
 
@@ -295,6 +346,8 @@ window = pyglet.window.Window(width = const.WINDOW_WIDTH, height = const.WINDOW_
 pyglet.gl.glClearColor(1.0,1.0,1.0,1)
 batch = pyglet.graphics.Batch()
 
+ice_batch = pyglet.graphics.Batch()
+
 image = pyglet.resource.image('atk0.png')
 
 test_places_clicked = []
@@ -323,10 +376,14 @@ def enemy_projectile_collision(dt):
         return
 
     global is_shop, punch_time, coins, is_win
+
+    #ATTACK
     remove_enemies = []
     remove_projectiles = []
 
     for projectile in levels[level_number].projectiles:
+        if projectile.image != const.BOMB_IMAGE:
+            continue
         closest_dist = 10000000
         corresponding_enemy = -1
         if projectile in remove_projectiles:
@@ -376,6 +433,57 @@ def enemy_projectile_collision(dt):
 
     if len(levels[level_number].enemies) == 0:
         next_level_setup()
+
+    #DEFENCE
+    frozen_enemies = []
+    remove_projectiles = []
+
+    for projectile in levels[level_number].projectiles:
+        if projectile.image != const.FROST_IMAGE:
+            continue
+        if projectile in remove_projectiles:
+            continue
+        for enemy in levels[level_number].enemies:
+            #make sure rect_collide isn't too sketchy... it seems to
+            #brush past the legs of e0.png without collision
+            #fuck it i'm trying mozilla_rect_collide
+
+            ''' If statement checks:
+                    - If collision occurs
+                    - If the enemy is closer to the projectile than another
+                    enemy collided with the projectile
+                    - If the collision happened on the screen
+            '''
+            if (mozilla_rect_collide(enemy.x, enemy.x+enemy.width,
+                enemy.y, enemy.y+enemy.height,
+                projectile.x, projectile.x+projectile.width,
+                projectile.y, projectile.y+projectile.height)
+                and -enemy.width <= enemy.x <= const.WINDOW_WIDTH
+                and enemy.y <= const.WINDOW_HEIGHT):
+                for enemy2 in levels[level_number].enemies:
+                    if (((enemy2.x+enemy2.width/2) - (projectile.x+projectile.width/2))**2
+                        + ((enemy2.y+enemy2.height/2) - (projectile.y+projectile.height/2))**2
+                        <= 10000):
+                        frozen_enemies.append(enemy2)
+                        remove_projectiles.append(projectile)
+
+    ice_time = get_time()
+    if len(frozen_enemies) != 0:
+        ice_player.seek(0.0)
+        '''audible?^^'''
+        ice_player.play()
+    for enemy in frozen_enemies:
+        if enemy not in levels[level_number].enemies:
+            continue
+        idx = levels[level_number].enemies.index(enemy)
+        levels[level_number].enemies[idx].freeze_time = ice_time
+    done = []
+    for projectile in remove_projectiles:
+        if projectile in done:
+            continue
+        done.append(projectile)
+        levels[level_number].projectiles.remove(projectile)
+
 clock.schedule(enemy_projectile_collision)
 
 def timed_erase_dots(dt):
@@ -467,13 +575,21 @@ def on_key_press(symbol, modifiers):
             # It is currently a fighting stage.
             next_level_setup()
 
-def add_projectile_0(x, y):
+def add_projectile_a0(x, y):
     #print("---- ({}, {})".format(x, y))
     levels[level_number].projectiles.append(Bomb(x-const.BOMB_WIDTH/2, y-const.BOMB_HEIGHT/2, const.BOMB_IMAGE, gen.cur_id))
     gen.cur_id += 1
     bomb = levels[level_number].projectiles[-1]
     bomb.sprite.batch = levels[level_number].projectile_batch
     bomb.update_velocity()
+
+def add_projectile_d0(x, y):
+    #print("---- ({}, {})".format(x, y))
+    levels[level_number].projectiles.append(FrostPotion(x-const.FROST_POTION_WIDTH/2, y-const.FROST_POTION_HEIGHT/2, const.FROST_IMAGE, gen.cur_id))
+    gen.cur_id += 1
+    frost_potion = levels[level_number].projectiles[-1]
+    frost_potion.sprite.batch = levels[level_number].projectile_batch
+    frost_potion.update_velocity()
 
 def can_fire():
     #cur_time = get_time()
@@ -512,9 +628,12 @@ def add_projectile(x, y):
     if not can_fire():
         return
     Projectile.last_time = get_time()
-    print(Projectile.last_time)
-    if cur_char[3] == "0":
-        add_projectile_0(x, y)
+    if cur_char[:3] == "atk":
+        if cur_char[3] == "0":
+            add_projectile_a0(x, y)
+    elif cur_char[:3] == "def":
+        if cur_char[3] == "0":
+            add_projectile_d0(x, y)
 
 @window.event
 def on_mouse_press(x, y, button, modifiers):
@@ -527,7 +646,7 @@ def on_mouse_press(x, y, button, modifiers):
         if button == mouse.LEFT:
             #print("Left mouse button clicked during battle at ({}, {}).".format(x, y))
             #test_places_clicked.append([('v2i', (x, y)), ('c3B', (0, 0, 0)), get_time()])
-            if cur_char[:3] == "atk":
+            if cur_char[:3] in ["atk", "def"]:
                 add_projectile(x, y)
 
 
@@ -618,6 +737,9 @@ def stop_sound(dt):
     t = int(round(time.time() * 1000))
     if t > punch_time + 585:
         player.pause()
+    t = int(round(time.time() * 1000))
+    if t > ice_time + 510:
+        ice_player.pause()
 clock.schedule(stop_sound)
 
 millis = int(round(time.time() * 1000))
@@ -631,11 +753,18 @@ def apply_damage(dt):
         return
     # what are the other game states that are not battle?
     for enemy in levels[level_number].enemies:
+        if get_time() - enemy.freeze_time < 2000:
+            continue
         #print(int(round(time.time() * 1000)) - millis)
-        HALF_WIDTH = const.WINDOW_WIDTH//2 - enemy.width//2
-        if const.in_safe_space(enemy.x, enemy.y, enemy.width):
-            enemy.change_colour()
-            health -= ENEMY_DAMAGE
+        if enemy.image_name in ["e0.png", "e1.png", "e2.png", "e0i.png", "e1i.png", "e2i.png"]:
+            HALF_WIDTH = const.WINDOW_WIDTH//2 - enemy.width//2
+            if const.in_safe_space(enemy.x, enemy.y, enemy.width):
+                enemy.change_colour()
+                health -= ENEMY_DAMAGE
+        elif enemy.image_name in ["e3.png", "e4.png", "e5.png", "e3i.png", "e4i.png", "e5i.png"]:
+            if const.HORI_LEFT <= enemy.x <= const.HORI_RIGHT:
+                enemy.change_colour()
+                health -= ENEMY_DAMAGE
         if health <= 0:
             is_game_over = True
         #millis = int(round(time.time() * 1000))
@@ -672,11 +801,21 @@ def on_draw():
     elif is_shop == False:
         batch.draw()
         levels[level_number].enemies_batch.draw()
+        for enemy in levels[level_number].enemies:
+            enemy.ice_sprite.x = enemy.x-25
+            enemy.ice_sprite.y = enemy.y-25
+            if get_time() - enemy.freeze_time < 2000:
+                enemy.ice_sprite.batch = ice_batch
+            else:
+                enemy.ice_sprite.batch = no_batch
+        ice_batch.draw()
+        '''
         for place in test_places_clicked:
             pyglet.graphics.draw(1, pyglet.gl.GL_POINTS,
                 place[0],
                 place[1]
             )
+        '''
         # health bar
         X_POS = const.WINDOW_WIDTH//2-max_health*BAR_WIDTH_MULTIPLIER//2
         Y_POS = 30
@@ -745,6 +884,12 @@ player = pyglet.media.Player()
 player.queue(punch_sound)
 player.eos_action = player.EOS_LOOP
 punch_time = 0
+
+ice_sound = pyglet.resource.media('ice.wav', streaming = False)
+ice_player = pyglet.media.Player()
+ice_player.queue(ice_sound)
+ice_player.eos_action = player.EOS_LOOP
+ice_time = 0
 
 # GAME STATE
 level_number = 0

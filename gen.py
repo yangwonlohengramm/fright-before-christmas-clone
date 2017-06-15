@@ -9,10 +9,10 @@ def gen0(level_number):
     if sum(enemies[level_number][:3]) <= 20:
         x = randrange(0, 1100)
         y = randrange(300, 700)
-    elif sum(enemies[level_number][:3]) <= 50:
+    elif sum(enemies[level_number][:3]) <= 40:
         x = randrange(-50, 1150)
         y = randrange(300, 800)
-    elif sum(enemies[level_number][:3]) <= 100:
+    elif sum(enemies[level_number][:3]) <= 60:
         x = randrange(-100, 1200)
         y = randrange(300, 900)
     else:
@@ -25,10 +25,10 @@ def gen1(level_number):
     if sum(enemies[level_number][:3]) <= 20:
         x = randrange(-100, 1200)
         y = randrange(300, 800)
-    elif sum(enemies[level_number][:3]) <= 50:
+    elif sum(enemies[level_number][:3]) <= 40:
         x = randrange(-200, 1300)
         y = randrange(300, 900)
-    elif sum(enemies[level_number][:3]) <= 100:
+    elif sum(enemies[level_number][:3]) <= 60:
         x = randrange(-400, 1500)
         y = randrange(300, 1100)
     else:
@@ -40,10 +40,10 @@ def gen2(level_number):
     if sum(enemies[level_number][:3]) <= 20:
         x = randrange(-200, 1300)
         y = randrange(300, 900)
-    elif sum(enemies[level_number][:3]) <= 50:
+    elif sum(enemies[level_number][:3]) <= 40:
         x = randrange(-600, 1700)
         y = randrange(300, 1100)
-    elif sum(enemies[level_number][:3]) <= 100:
+    elif sum(enemies[level_number][:3]) <= 60:
         x = randrange(-1000, 2100)
         y = randrange(300, 1400)
     else:
@@ -126,10 +126,10 @@ def generate(level_number):
 enemies = [
     (5, 0, 0, 0, 0, 0),
     (10, 5, 0, 5, 5, 0),
-    (20, 10, 5, 10, 10, 0),
-    (30, 20, 10, 5, 5, 0),
-    (20, 20, 40, 10, 10, 0),
-    (0, 0, 100, 20, 20, 0),
+    (10, 10, 5, 5, 5, 0),
+    (5, 10, 10, 5, 5, 0),
+    (0, 2, 40, 3, 3, 0),
+    (0, 0, 50, 5, 5, 0),
     (10, 10, 10, 0, 0, 5),
-    (10, 10, 100, 20, 20, 10)
+    (10, 10, 40, 10, 10, 10)
 ]

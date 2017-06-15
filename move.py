@@ -1,14 +1,19 @@
 import pyglet # necessary?
 import math # necessary?
 import const
+import time
 
 ################################################################################
 # All movement should be assuming the bottom of the screen is 60 above the
 # actual bottom (720-60=660)
 ################################################################################
-
+#This function in test.py too
+def get_time():
+    return int(round(time.time() * 1000))
 
 def move_enemy(enemy):
+    if get_time() - enemy.freeze_time < 2000: # FREEZE TIME IS 2000 MS
+        return
     enemy.x += enemy.vel_x # technically kinda pointless
     enemy.y += enemy.vel_y # this too
     enemy.sprite.x += enemy.vel_x
@@ -44,9 +49,10 @@ def move_enemy_line(enemy):
         degrees = radians * 180.0 / math.pi
 
 def move_enemy_hori(enemy):
-    if const.in_safe_space(enemy.x, enemy.y, enemy.width):
+    # movement is fucked
+    if const.HORI_LEFT <= enemy.x <= const.HORI_RIGHT:
         enemy.vel_x = 0
-    if enemy.x < 540:
+    elif enemy.x < 540:
         enemy.vel_x = enemy.max_speed
     else:
         enemy.vel_x = -enemy.max_speed
