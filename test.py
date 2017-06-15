@@ -5,6 +5,8 @@
 
 # Currently I have manually drawn a safe space on each level background.
 
+#make get wole more expensive
+
 '''
 Make sure the game states (win, lose, store, battle 0->n) don't conflict with
 each other!
