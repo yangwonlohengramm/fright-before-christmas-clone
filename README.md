@@ -16,6 +16,12 @@ In a battle level, you **press spacebar** to switch characters. The girl attacks
 
 After every battle level, when all the enemies have been defeated, you can **buy items at the stop** to help you beat the enemies. Read the description and click the item to make a purchase. For now, since there is no coin-collecting mechanism, the amount you earn per level will be the same.
 
+## Hacks
+Press f to increase freeze radius.
+Press r to remove reload time.
+Press backspace to add 100 coins.
+Press enter to skip a level.
+
 ## How to Install
 
 ### Linux
