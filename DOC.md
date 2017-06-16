@@ -4,13 +4,13 @@
 
 There are four python files in my project.
 
-* * **test.py** * is the main file that is run to start the game.
+* ***test.py*** is the main file that is run to start the game.
 
-* * **move.py***  contains functions to change the velocity and position of `Enemy` objects.
+* ***move.py***  contains functions to change the velocity and position of `Enemy` objects.
 
-* * **gen.py** * handles the generation of level data, which is primarily the number and types of enemies. This is passed directly to *test.py*.
+* ***gen.py*** handles the generation of level data, which is primarily the number and types of enemies. This is passed directly to *test.py*.
 
-* * **const.py** * contains some constants and functions that are used in multiple contexts to reduce code clutter from *test.py*.
+* ***const.py*** contains some constants and functions that are used in multiple contexts to reduce code clutter from *test.py*.
 
  * Unfortunately, this led to some redundancies in code, and some inconsistencies, as some pieces of code that could belong in *const.py* are instead in *test.py*.
 
