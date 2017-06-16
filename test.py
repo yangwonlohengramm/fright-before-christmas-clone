@@ -791,7 +791,7 @@ def on_draw():
         coin_label = pyglet.text.Label('Money: {}'.format(coins),
                                   font_name='Times New Roman',
                                   font_size=16,
-                                  x=740, y=14,
+                                  x=760, y=14,
                                   anchor_x='center', anchor_y='center',
                                   color=(0, 0, 0, 255),
                                   bold=True)
@@ -828,7 +828,7 @@ def on_draw():
         coin_label = pyglet.text.Label('Money: {}'.format(coins),
                                   font_name='Times New Roman',
                                   font_size=16,
-                                  x=740, y=14,
+                                  x=760, y=14,
                                   anchor_x='center', anchor_y='center',
                                   color=(0, 0, 0, 255),
                                   bold=True,
