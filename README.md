@@ -1,6 +1,6 @@
-# Fright Before Christmas
+# Fright Before Christmas ![](https://vignette4.wikia.nocookie.net/grimadventures/images/f/fc/Mandy_CN.png/revision/latest?cb=20120911192745)
 
-Welcome to Max Li's *Fright Before Christmas Clone*, a full-featured, blazing-fast python3/pyglet clone of Cartoon Network's browser game, [*Fright Before Christmas*](www.gamegape.com/en-1812-the-fright-before-christmas.html). ![](https://vignette4.wikia.nocookie.net/grimadventures/images/f/fc/Mandy_CN.png/revision/latest?cb=20120911192745)
+Welcome to Max Li's *Fright Before Christmas Clone*, a full-featured, blazing-fast python3/pyglet clone of Cartoon Network's browser game, [*Fright Before Christmas*](www.gamegape.com/en-1812-the-fright-before-christmas.html). 
 
 For some brief programming documentation, please click [here](https://github.com/bobhob314/fright-before-christmas-clone/blob/master/DOC.md).
 
