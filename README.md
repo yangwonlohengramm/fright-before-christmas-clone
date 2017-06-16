@@ -2,6 +2,8 @@
 
 Welcome to Max Li's *Fright Before Christmas Clone*, a full-featured, blazing-fast python3/pyglet clone of Cartoon Network's browser game, [*Fright Before Christmas*](www.gamegape.com/en-1812-the-fright-before-christmas.html).
 
+For some brief programming documentation, please click [here](https://github.com/bobhob314/fright-before-christmas-clone/blob/master/DOC.md).
+
 ## Game Instructions
 
 *Note that there is an issue to set up an instruction screen. In the meantime, please read this first...*
