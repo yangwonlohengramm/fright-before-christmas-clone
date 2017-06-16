@@ -867,10 +867,10 @@ def on_draw():
                                   color=(0, 0, 0, 255),
                                   bold=True,
                                   batch = shop_batch)
-        iv_label_bottom = pyglet.text.Label('Raise your max health (Currently at level {}).'.format(swole_level),
+        iv_label_bottom = pyglet.text.Label('Raise your max health (Currently at {}, level {}).'.format(max_health, swole_level),
                                   font_name='Arial',
                                   font_size=10,
-                                  x=275, y=230,
+                                  x=268, y=230,
                                   multiline=True,
                                   width=150,
                                   anchor_x='center', anchor_y='center',
