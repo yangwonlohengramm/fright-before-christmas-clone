@@ -51,6 +51,7 @@ pyglet.gl.glClearColor(1.0,1.0,1.0,1)
 batch = pyglet.graphics.Batch()
 
 ice_batch = pyglet.graphics.Batch()
+freeze_square_distance = 10000
 
 image = pyglet.resource.image('atk0.png')
 
@@ -424,7 +425,7 @@ def enemy_projectile_collision(dt):
         for enemy in levels[level_number].enemies:
             if (((enemy.x+enemy.width/2) - (projectile.x+projectile.width/2))**2
                 + ((enemy.y+enemy.height/2) - (projectile.y+projectile.height/2))**2
-                <= 10000):
+                <= freeze_square_distance):
                 frozen_enemies.append(enemy)
                 remove_projectiles.append(projectile)
     if len(frozen_enemies) != 0:
@@ -485,7 +486,7 @@ clock.schedule(move_all)
 
 @window.event
 def on_key_press(symbol, modifiers):
-    global is_shop
+    global is_shop, freeze_square_distance, RELOAD_TIME
     #image has batch=batch so I assume batch will be modified globally too
     global sprite, batch, image, cur_char, my_x, coins
 
@@ -515,6 +516,10 @@ def on_key_press(symbol, modifiers):
                 cur_char = "atk"+str(char_options["atk"].index(True))
             image = pyglet.resource.image(cur_char+".png")
             sprite = pyglet.sprite.Sprite(image, x=my_x, y=my_y, batch=batch)
+        elif symbol == key.F:
+            freeze_square_distance = 100000
+        elif symbol == key.R:
+            RELOAD_TIME = 0
 
         # This is a developer-only key. It lets you skip a level.
         elif symbol == key.ENTER:
@@ -786,7 +791,7 @@ def on_draw():
         coin_label = pyglet.text.Label('Money: {}'.format(coins),
                                   font_name='Times New Roman',
                                   font_size=16,
-                                  x=700, y=14,
+                                  x=740, y=14,
                                   anchor_x='center', anchor_y='center',
                                   color=(0, 0, 0, 255),
                                   bold=True)
