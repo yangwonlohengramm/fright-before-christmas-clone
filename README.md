@@ -28,7 +28,7 @@ Press enter to skip a level.
 
 1. Install pygame with `sudo apt-get install python-pygame` or equivalent.
 2. Install pip3 with `sudo apt-get install python-pip3` or equivalent.
-3. Install pyglet with `sudo pip3 install pyglet`.
+3. Install pyglet with `sudo pip3 install pyglet==1.2.3`.
 4. Navigate to project folder.
 5. Run test.py with `python3 test.py`.
 
@@ -37,7 +37,7 @@ Press enter to skip a level.
 1. Install Python 3.
 2. Install pygame.
 3. Install pip3.
-4. Install pyglet with pip3.
+4. Install pyglet version 1.2.3 with pip3.
 5. Navigate to project folder.
 6. Run test.py with 'python3 test.py`.
 
